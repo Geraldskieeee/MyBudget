@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBudget - Smart Financial Tracking</title>
+    <meta name="description" content="Take control of your finances with MyBudget. Track wallets, transactions, and savings goals in one sleek application.">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">MyBudget</div>
+            <a href="#download" class="nav-cta">Download App</a>
+        </div>
+    </nav>
+
+    <header class="hero container">
+        <div class="hero-content">
+            <div class="hero-badge">Available Now for Android</div>
+            <h1 class="hero-title">Take Control of Your <span class="text-gradient">Finances</span></h1>
+            <p class="hero-subtitle">The ultimate, all-in-one budgeting app with stunning aesthetics, real-time wallet tracking, and advanced goal management.</p>
+            
+            <div class="hero-actions" id="download">
+                <a href="#" class="btn btn-primary" onclick="alert('The APK is currently being generated. Check back soon!')">
+                    <i class="fa-brands fa-android"></i> Download APK
+                </a>
+                <a href="#features" class="btn btn-secondary">Explore Features</a>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value">Free</span>
+                    <span class="stat-label">Forever</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">100%</span>
+                    <span class="stat-label">Secure</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-image-wrapper">
+            <div class="glass-panel mockup-panel">
+                <img src="assets/hero-mockup.jpg" alt="MyBudget App Dashboard" class="hero-mockup">
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features container">
+        <div class="section-header">
+            <h2>Everything you need.</h2>
+            <p>Designed to provide unparalleled clarity over your financial health.</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-wallet"></i></div>
+                <h3>Multi-Wallet Tracking</h3>
+                <p>Create and manage multiple wallets (Cash, Bank, GCash) with individual starting balances and real-time ledger updates.</p>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-money-bill-transfer"></i></div>
+                <h3>Smart Transactions</h3>
+                <p>Easily log incomes, expenses, and inter-wallet transfers. Everything calculates chronologically automatically.</p>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <h3>Savings Goals</h3>
+                <p>Set targets for your next vacation or emergency fund and watch your progress bar fill up in real-time.</p>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                <h3>Secure Authentication</h3>
+                <p>Powered by Firebase, secure your financial data with robust Email & Password accounts.</p>
+            </div>
+            
+            <!-- Feature 5 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <h3>Upcoming Bills</h3>
+                <p>Never miss a payment. Keep track of recurring expenses and upcoming due dates directly on your dashboard.</p>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="feature-card glass-panel">
+                <div class="feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <h3>Stunning Dark Mode</h3>
+                <p>A gorgeous, completely native UI featuring glassmorphism, vibrant gradients, and buttery smooth navigation.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container footer-container">
+            <div class="footer-logo">MyBudget</div>
+            <p class="copyright">&copy; 2026 MyBudget App. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#"><i class="fa-brands fa-github"></i> View Source</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple scroll reveal animation
+        document.addEventListener("DOMContentLoaded", function() {
+            const cards = document.querySelectorAll('.feature-card');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = 1;
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            cards.forEach((card, index) => {
+                card.style.opacity = 0;
+                card.style.transform = 'translateY(30px)';
+                card.style.transition = `all 0.6s cubic-bezier(0.16, 1, 0.3, 1) ${index * 0.1}s`;
+                observer.observe(card);
+            });
+        });
+    </script>
+</body>
+</html>
