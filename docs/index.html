@@ -114,25 +114,19 @@
                 <p>We're always looking to improve MyBudget. Send us your feature requests or feedback directly!</p>
             </div>
             
-            <!-- Replace YOUR_FORMSPREE_ENDPOINT with your actual Formspree URL -->
-            <form class="suggestion-form" action="YOUR_FORMSPREE_ENDPOINT" method="POST">
+            <form class="suggestion-form" onsubmit="sendEmail(event)">
                 <div class="form-group">
                     <label for="name">Name (Optional)</label>
-                    <input type="text" id="name" name="name" placeholder="How should we address you?">
-                </div>
-                
-                <div class="form-group">
-                    <label for="email">Email (Optional)</label>
-                    <input type="email" id="email" name="_replyto" placeholder="For us to reply back">
+                    <input type="text" id="name" placeholder="How should we address you?">
                 </div>
                 
                 <div class="form-group">
                     <label for="message">Your Suggestion *</label>
-                    <textarea id="message" name="message" rows="4" placeholder="I would love a feature that..." required></textarea>
+                    <textarea id="message" rows="4" placeholder="I would love a feature that..." required></textarea>
                 </div>
                 
                 <button type="submit" class="btn btn-primary submit-btn">
-                    <i class="fa-solid fa-paper-plane"></i> Send Suggestion
+                    <i class="fa-solid fa-paper-plane"></i> Open Email App
                 </button>
             </form>
         </div>
@@ -149,6 +143,15 @@
     </footer>
 
     <script>
+        function sendEmail(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const message = document.getElementById('message').value;
+            const subject = encodeURIComponent(`MyBudget Suggestion from ${name || 'a User'}`);
+            const body = encodeURIComponent(message);
+            window.location.href = `mailto:villegasgerald22@gmail.com?subject=${subject}&body=${body}`;
+        }
+
         // Simple scroll reveal animation
         document.addEventListener("DOMContentLoaded", function() {
             const cards = document.querySelectorAll('.feature-card');
