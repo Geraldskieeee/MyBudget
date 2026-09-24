@@ -145,90 +145,31 @@ fun WalletsScreen(
                     val totalBalance = wallets.sumOf { it.currentBalance }
                     com.example.mybudget.ui.components.PhysicalWalletHeader(
                         wallets = wallets,
-                        totalBalance = totalBalance
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                items(wallets) { wallet ->
-                val isSelected = selectedWallets.contains(wallet.id)
-                
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .combinedClickable(
-                            onClick = {
-                                if (isSelectionMode) {
-                                    if (isSelected) {
-                                        selectedWallets -= wallet.id
-                                        if (selectedWallets.isEmpty()) isSelectionMode = false
-                                    } else {
-                                        selectedWallets += wallet.id
-                                    }
+                        totalBalance = totalBalance,
+                        selectedWallets = selectedWallets,
+                        onWalletClick = { wallet ->
+                            if (isSelectionMode) {
+                                val isSelected = selectedWallets.contains(wallet.id)
+                                if (isSelected) {
+                                    selectedWallets -= wallet.id
+                                    if (selectedWallets.isEmpty()) isSelectionMode = false
                                 } else {
-                                    navController.navigate(Screen.WalletDetails.createRoute(wallet.id))
-                                }
-                            },
-                            onLongClick = {
-                                if (!isSelectionMode) {
-                                    isSelectionMode = true
                                     selectedWallets += wallet.id
                                 }
+                            } else {
+                                navController.navigate(Screen.WalletDetails.createRoute(wallet.id))
                             }
-                        ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
-                    shape = RoundedCornerShape(20.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(
-                                brush = Brush.linearGradient(
-                                    colors = if (isSelected) {
-                                        listOf(
-                                            MaterialTheme.colorScheme.tertiary,
-                                            MaterialTheme.colorScheme.primary
-                                        )
-                                    } else {
-                                        listOf(
-                                            Color(0xFF0F2027),
-                                            Color(0xFF203A43),
-                                            Color(0xFF2C5364)
-                                        )
-                                    }
-                                )
-                            )
-                            .padding(24.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = wallet.name.uppercase(), 
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Black,
-                                letterSpacing = 2.sp,
-                                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
-                            )
-                            Spacer(modifier = Modifier.height(24.dp))
-                            Text(
-                                text = "₱ ${String.format(Locale.US, "%.2f", wallet.startingBalance)}",
-                                style = MaterialTheme.typography.headlineMedium,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            val dateAdded = SimpleDateFormat("MMM dd, yyyy hh:mm a", Locale.US).format(Date(wallet.id))
-                            Text(
-                                text = "Added: $dateAdded",
-                                style = MaterialTheme.typography.labelLarge,
-                                color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.5f)
-                            )
+                        },
+                        onWalletLongClick = { wallet ->
+                            if (!isSelectionMode) {
+                                isSelectionMode = true
+                                selectedWallets += wallet.id
+                            }
                         }
-                    }
+                    )
                 }
             }
         }
-    }
     }
     
     if (showDeleteDialog) {

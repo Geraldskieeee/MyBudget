@@ -1,5 +1,7 @@
 package com.example.mybudget.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,10 +23,14 @@ import com.example.mybudget.ui.theme.RichBlack
 import java.text.NumberFormat
 import java.util.Locale
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun PhysicalWalletHeader(
     wallets: List<Wallet>,
     totalBalance: Double,
+    selectedWallets: Set<Long> = emptySet(),
+    onWalletClick: (Wallet) -> Unit = {},
+    onWalletLongClick: (Wallet) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val visibleWallets = wallets.take(5)
@@ -50,7 +56,9 @@ fun PhysicalWalletHeader(
             // Generate a distinct vibrant color based on the wallet's ID/name
             val colorHash = kotlin.math.abs(wallet.name.hashCode())
             val hue = (colorHash % 360).toFloat()
-            val color = Color.hsv(hue, 0.6f, 0.9f)
+            val baseColor = Color.hsv(hue, 0.6f, 0.9f)
+            val isSelected = selectedWallets.contains(wallet.id)
+            val color = if (isSelected) baseColor.copy(alpha = 0.5f) else baseColor
             
             Box(
                 modifier = Modifier
@@ -61,6 +69,10 @@ fun PhysicalWalletHeader(
                     .height(140.dp)
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(color)
+                    .combinedClickable(
+                        onClick = { onWalletClick(wallet) },
+                        onLongClick = { onWalletLongClick(wallet) }
+                    )
             ) {
                 Row(
                     modifier = Modifier
