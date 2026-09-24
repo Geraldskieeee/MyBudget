@@ -33,8 +33,8 @@ import com.example.mybudget.ui.screens.transactions.TransactionsScreen
 import com.example.mybudget.ui.screens.wallets.AddWalletScreen
 import com.example.mybudget.ui.screens.wallets.WalletDetailsScreen
 import com.example.mybudget.ui.screens.wallets.WalletDetailsViewModel
+import com.example.mybudget.ui.screens.wallets.AnalyticsScreen
 import com.example.mybudget.ui.screens.wallets.WalletViewModel
-import com.example.mybudget.ui.screens.wallets.WalletsScreen
 
 @Composable
 fun MyBudgetAppScreen(
@@ -53,7 +53,7 @@ fun MyBudgetAppScreen(
     val showBottomBar = currentRoute in listOf(
         Screen.Home.route,
         Screen.Transactions.route,
-        Screen.Wallets.route,
+        Screen.Analytics.route,
         Screen.Budget.route,
         Screen.More.route
     ) && isUserLoggedIn == true
@@ -120,9 +120,8 @@ fun MyBudgetAppScreen(
                 val viewModel: BudgetViewModel = hiltViewModel()
                 BudgetScreen(viewModel = viewModel)
             }
-            composable(Screen.Wallets.route) {
-                val viewModel: WalletViewModel = hiltViewModel()
-                WalletsScreen(navController = navController, viewModel = viewModel)
+            composable(Screen.Analytics.route) {
+                AnalyticsScreen(navController = navController)
             }
             composable(Screen.More.route) {
                 val viewModel: com.example.mybudget.ui.screens.more.MoreViewModel = hiltViewModel()

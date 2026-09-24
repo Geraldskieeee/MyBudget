@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    walletRepository: WalletRepository,
+    private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
     private val billRepository: BillRepository,
     private val goalRepository: GoalRepository,
@@ -150,6 +150,12 @@ class HomeViewModel @Inject constructor(
 
             // Mark debt as settled
             debtRepository.updateDebt(debt.copy(isSettled = true))
+        }
+    }
+
+    fun deleteWallet(wallet: Wallet) {
+        viewModelScope.launch {
+            walletRepository.deleteWallet(wallet)
         }
     }
 }

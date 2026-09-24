@@ -3,6 +3,7 @@ package com.example.mybudget.ui.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Menu
@@ -41,7 +42,7 @@ fun BottomNavBar(navController: NavController) {
     val topLevelRoutes = listOf(
         Screen.Home.route,
         Screen.Budget.route,
-        Screen.Wallets.route,
+        Screen.Analytics.route,
         Screen.More.route
     )
 
@@ -59,7 +60,7 @@ fun BottomNavBar(navController: NavController) {
                 Screen.Home,
                 Screen.Budget,
                 Screen.AddTransaction,
-                Screen.Wallets,
+                Screen.Analytics,
                 Screen.More
             )
             
@@ -89,7 +90,7 @@ fun BottomNavBar(navController: NavController) {
                     val icon = when (screen) {
                         Screen.Home -> Icons.Filled.Home
                         Screen.Budget -> Icons.Filled.PieChart
-                        Screen.Wallets -> Icons.Filled.AccountBalanceWallet
+                        Screen.Analytics -> Icons.Filled.BarChart
                         Screen.More -> Icons.Filled.Menu
                         else -> Icons.Filled.Home
                     }

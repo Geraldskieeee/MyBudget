@@ -6,7 +6,7 @@ sealed class Screen(val route: String, val title: String, val icon: String? = nu
     object Home : Screen("home", "Home")
     object Transactions : Screen("transactions", "Transactions")
     object Budget : Screen("budget", "Budget")
-    object Wallets : Screen("wallets", "Wallets")
+    object Analytics : Screen("analytics", "Analytics")
     object More : Screen("more", "More")
     object AddWallet : Screen("add_wallet", "Add Wallet")
     object AddTransaction : Screen("add_transaction", "Add Transaction")

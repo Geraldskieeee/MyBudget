@@ -21,6 +21,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.Close
+import com.example.mybudget.ui.components.PhysicalWalletHeader
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -45,7 +47,10 @@ fun HomeScreen(
     onDeleteBill: (Bill) -> Unit = {},
     onDeleteGoal: (Goal) -> Unit = {},
     onDeleteDebt: (Debt) -> Unit = {},
-    onSettleDebt: (Debt, Long) -> Unit = { _, _ -> }
+    onSettleDebt: (Debt, Long) -> Unit = { _, _ -> },
+    onWalletClick: (Wallet) -> Unit = {},
+    onDeleteWallet: (Wallet) -> Unit = {},
+    onAddWalletClick: () -> Unit = {}
 ) {
     val totalBalance by viewModel.totalBalance.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
@@ -59,15 +64,50 @@ fun HomeScreen(
     val debts by viewModel.debts.collectAsState()
 
     val wallets by viewModel.wallets.collectAsState()
+    var isWalletSelectionMode by remember { mutableStateOf(false) }
+    var selectedWallets by remember { mutableStateOf(setOf<Long>()) }
+    var showDeleteWalletDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Dashboard", fontWeight = FontWeight.Bold) },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+            if (isWalletSelectionMode) {
+                TopAppBar(
+                    title = { Text("${selectedWallets.size} Selected") },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            isWalletSelectionMode = false
+                            selectedWallets = emptySet()
+                        }) {
+                            Icon(Icons.Filled.Close, contentDescription = "Cancel")
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = {
+                            selectedWallets = if (selectedWallets.size == wallets.size) emptySet() else wallets.map { it.id }.toSet()
+                        }) {
+                            Text(if (selectedWallets.size == wallets.size) "Deselect All" else "Select All", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        IconButton(onClick = { showDeleteWalletDialog = true }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
                 )
-            )
+            } else {
+                TopAppBar(
+                    title = { Text("Dashboard", fontWeight = FontWeight.Bold) },
+                    actions = {
+                        IconButton(onClick = onAddWalletClick) {
+                            Icon(Icons.Filled.Add, contentDescription = "Add Wallet")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    )
+                )
+            }
         }
     ) { padding ->
         LazyColumn(
@@ -79,7 +119,59 @@ fun HomeScreen(
         ) {
             // 1. Total Balance Card
             item {
-                BalanceCard(totalBalance)
+                if (wallets.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = "Empty",
+                                modifier = Modifier.size(64.dp),
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No wallets yet",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Click the + button to create one",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                } else {
+                    PhysicalWalletHeader(
+                        wallets = wallets,
+                        totalBalance = totalBalance,
+                        selectedWallets = selectedWallets,
+                        onWalletClick = { wallet ->
+                            if (isWalletSelectionMode) {
+                                if (selectedWallets.contains(wallet.id)) {
+                                    selectedWallets -= wallet.id
+                                    if (selectedWallets.isEmpty()) isWalletSelectionMode = false
+                                } else {
+                                    selectedWallets += wallet.id
+                                }
+                            } else {
+                                onWalletClick(wallet)
+                            }
+                        },
+                        onWalletLongClick = { wallet ->
+                            if (!isWalletSelectionMode) {
+                                isWalletSelectionMode = true
+                                selectedWallets += wallet.id
+                            }
+                        }
+                    )
+                }
             }
 
             // 2. Today's Summary
@@ -147,6 +239,35 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    if (showDeleteWalletDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteWalletDialog = false },
+            title = { Text("Delete Wallets") },
+            text = { 
+                Text(
+                    if (selectedWallets.size == 1) "Are you sure you want to delete the selected wallet? This action cannot be undone."
+                    else "Are you sure you want to delete ${selectedWallets.size} wallets? This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val toDelete = wallets.filter { it.id in selectedWallets }
+                    toDelete.forEach { onDeleteWallet(it) }
+                    isWalletSelectionMode = false
+                    selectedWallets = emptySet()
+                    showDeleteWalletDialog = false
+                }) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteWalletDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
