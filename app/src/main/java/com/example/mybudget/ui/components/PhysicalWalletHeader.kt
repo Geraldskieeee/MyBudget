@@ -5,8 +5,17 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,6 +50,8 @@ fun PhysicalWalletHeader(
     // The pocket starts immediately after the last card's offset.
     val pocketOffsetY = cardOffset * visibleWallets.size
     val totalHeight = pocketOffsetY + pocketHeight
+    
+    var isBalanceVisible by remember { mutableStateOf(true) }
 
     Box(
         modifier = modifier
@@ -125,18 +136,32 @@ fun PhysicalWalletHeader(
                 verticalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = NumberFormat.getCurrencyInstance(Locale.US).format(totalBalance),
+                    text = if (isBalanceVisible) NumberFormat.getCurrencyInstance(Locale.US).format(totalBalance) else "****",
                     color = Color.White,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Total Balance",
-                    color = Color.White.copy(alpha = 0.5f),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "Total Balance",
+                        color = Color.White.copy(alpha = 0.5f),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    IconButton(
+                        onClick = { isBalanceVisible = !isBalanceVisible },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBalanceVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff,
+                            contentDescription = "Toggle Balance Visibility",
+                            tint = Color.White.copy(alpha = 0.5f),
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
             }
         }
     }
