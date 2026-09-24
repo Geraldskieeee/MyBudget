@@ -149,7 +149,7 @@ fun HomeScreen(
                     }
                 } else {
                     PhysicalWalletHeader(
-                        modifier = Modifier.padding(top = 24.dp),
+                        modifier = Modifier.padding(bottom = 24.dp),
                         wallets = wallets,
                         totalBalance = totalBalance,
                         selectedWallets = selectedWallets,
