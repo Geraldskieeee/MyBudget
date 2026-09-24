@@ -174,10 +174,7 @@ fun HomeScreen(
                 }
             }
 
-            // 2. Today's Summary
-            item {
-                TodayExpensesCard(todayExpenses)
-            }
+
             
             // 3. Savings Progress
             item {
