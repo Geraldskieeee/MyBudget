@@ -28,54 +28,57 @@ fun PhysicalWalletHeader(
     modifier: Modifier = Modifier
 ) {
     val visibleWallets = wallets.take(5)
-    val cardOffset = 28.dp
-    val pocketHeight = 180.dp
+    val cardOffset = 36.dp
+    val pocketHeight = 200.dp
     
-    // The total height depends on how many cards are sticking out.
-    // Base height is the pocket. Each card adds 28dp to the top.
-    val totalHeight = pocketHeight + (cardOffset * visibleWallets.size)
+    // Each card adds cardOffset to the Y position.
+    // The pocket starts immediately after the last card's offset.
+    val pocketOffsetY = cardOffset * visibleWallets.size
+    val totalHeight = pocketOffsetY + pocketHeight
 
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(totalHeight)
-            .padding(horizontal = 16.dp, vertical = 16.dp),
-        contentAlignment = Alignment.TopCenter
+            .padding(horizontal = 16.dp)
+            .padding(top = 24.dp)
     ) {
         // Draw the stacked cards (from back to front)
+        // Index 0 is drawn first (at the back), with Y=0.
+        // Index 1 is drawn next, with Y=cardOffset.
         visibleWallets.forEachIndexed { index, wallet ->
-            // Generate a distinct color based on the wallet's ID or name
+            // Generate a distinct vibrant color based on the wallet's ID/name
             val colorHash = kotlin.math.abs(wallet.name.hashCode())
             val hue = (colorHash % 360).toFloat()
-            val color = Color.hsv(hue, 0.7f, 0.8f)
+            val color = Color.hsv(hue, 0.6f, 0.9f)
             
             Box(
                 modifier = Modifier
                     .offset(y = cardOffset * index)
                     .fillMaxWidth()
-                    // Create a tiered width effect (back cards look smaller due to perspective)
-                    .padding(horizontal = (12 + (visibleWallets.size - index - 1) * 4).dp)
-                    .height(120.dp)
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    // Back cards are slightly narrower for perspective
+                    .padding(horizontal = ((visibleWallets.size - index) * 6).dp)
+                    .height(140.dp)
+                    .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(color)
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = wallet.name,
+                        text = wallet.name.uppercase(),
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 16.sp
                     )
                     Text(
                         text = NumberFormat.getCurrencyInstance(Locale.US).format(wallet.currentBalance),
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp
+                        fontSize = 16.sp
                     )
                 }
             }
@@ -84,7 +87,7 @@ fun PhysicalWalletHeader(
         // Draw the Leather Pocket (Foreground)
         Box(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
+                .offset(y = pocketOffsetY)
                 .fillMaxWidth()
                 .height(pocketHeight)
                 .clip(RoundedCornerShape(32.dp))

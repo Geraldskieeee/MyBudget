@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -104,23 +105,52 @@ fun WalletsScreen(
             }
         }
     ) { paddingValues ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                val totalBalance = wallets.sumOf { it.currentBalance }
-                com.example.mybudget.ui.components.PhysicalWalletHeader(
-                    wallets = wallets,
-                    totalBalance = totalBalance
-                )
-                Spacer(modifier = Modifier.height(16.dp))
+        if (wallets.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Empty",
+                        modifier = Modifier.size(64.dp),
+                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No wallets yet",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Click the + button to create one",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
             }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    val totalBalance = wallets.sumOf { it.currentBalance }
+                    com.example.mybudget.ui.components.PhysicalWalletHeader(
+                        wallets = wallets,
+                        totalBalance = totalBalance
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
-            items(wallets) { wallet ->
+                items(wallets) { wallet ->
                 val isSelected = selectedWallets.contains(wallet.id)
                 
                 Card(
@@ -198,6 +228,7 @@ fun WalletsScreen(
                 }
             }
         }
+    }
     }
     
     if (showDeleteDialog) {
