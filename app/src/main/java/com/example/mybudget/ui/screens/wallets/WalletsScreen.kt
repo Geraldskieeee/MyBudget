@@ -108,9 +108,18 @@ fun WalletsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 88.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 88.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            item {
+                val totalBalance = wallets.sumOf { it.currentBalance }
+                com.example.mybudget.ui.components.PhysicalWalletHeader(
+                    wallets = wallets,
+                    totalBalance = totalBalance
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             items(wallets) { wallet ->
                 val isSelected = selectedWallets.contains(wallet.id)
                 
