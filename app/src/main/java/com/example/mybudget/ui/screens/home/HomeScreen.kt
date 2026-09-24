@@ -148,8 +148,8 @@ fun HomeScreen(
                         }
                     }
                 } else {
-                    Spacer(modifier = Modifier.height(16.dp))
                     PhysicalWalletHeader(
+                        modifier = Modifier.padding(top = 24.dp),
                         wallets = wallets,
                         totalBalance = totalBalance,
                         selectedWallets = selectedWallets,
