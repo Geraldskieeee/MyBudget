@@ -108,7 +108,10 @@ fun MyBudgetAppScreen(
                     onDeleteBill = { bill -> viewModel.deleteBill(bill) },
                     onDeleteGoal = { goal -> viewModel.deleteGoal(goal) },
                     onDeleteDebt = { debt -> viewModel.deleteDebt(debt) },
-                    onSettleDebt = { debt, walletId -> viewModel.settleDebt(debt, walletId) }
+                    onSettleDebt = { debt, walletId -> viewModel.settleDebt(debt, walletId) },
+                    onWalletClick = { wallet -> navController.navigate(Screen.WalletDetails.createRoute(wallet.id)) },
+                    onAddWalletClick = { navController.navigate(Screen.AddWallet.route) },
+                    onDeleteWallet = { wallet -> viewModel.deleteWallet(wallet) }
                 )
             }
             composable(Screen.Transactions.route) {
