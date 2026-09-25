@@ -222,7 +222,7 @@ fun AdminDashboardScreen(
                 } else {
                     LazyColumn(
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy((-16).dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(viewModel.suggestions, key = { it.id }) { suggestion ->
                             SuggestionItem(
@@ -240,7 +240,7 @@ fun AdminDashboardScreen(
                 } else {
                     LazyColumn(
                         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 100.dp),
-                        verticalArrangement = Arrangement.spacedBy((-16).dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         items(viewModel.activeUsers, key = { it.id }) { user ->
                             val itemContext = androidx.compose.ui.platform.LocalContext.current
