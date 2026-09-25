@@ -104,7 +104,7 @@ fun AddWalletScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .padding(bottom = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F5132)),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF32D74B), contentColor = Color.Black),
                 shape = RoundedCornerShape(50)
             ) {
                 androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
