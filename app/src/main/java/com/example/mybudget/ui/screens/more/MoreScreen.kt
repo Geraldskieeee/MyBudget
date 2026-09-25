@@ -265,7 +265,7 @@ fun MoreScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Version 5.5.0",
+                        text = "Version 5.5.0 (Alpha Test - Free)",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
