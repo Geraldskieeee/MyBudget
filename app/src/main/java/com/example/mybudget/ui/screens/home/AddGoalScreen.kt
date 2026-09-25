@@ -31,7 +31,7 @@ fun AddGoalScreen(
         containerColor = Color(0xFFF5F2EB), // Cream background
         topBar = {
             Surface(
-                color = Color(0xFF1B6B43),
+                color = Color(0xFF32D74B),
                 shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
                 shadowElevation = 8.dp
             ) {
@@ -44,8 +44,8 @@ fun AddGoalScreen(
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color.Transparent,
-                        titleContentColor = Color.White,
-                        navigationIconContentColor = Color.White
+                        titleContentColor = Color.Black,
+                        navigationIconContentColor = Color.Black
                     )
                 )
             }
