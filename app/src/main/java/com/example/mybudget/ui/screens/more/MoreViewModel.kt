@@ -14,6 +14,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileWriter
@@ -33,7 +35,8 @@ class MoreViewModel @Inject constructor(
 
     val userDisplayName = auth.currentUser?.displayName ?: "My Budget User"
     val userEmail = auth.currentUser?.email ?: "user@mybudget.com"
-    val userPhotoUrl = auth.currentUser?.photoUrl?.toString()
+    private val _userPhotoUrl = MutableStateFlow(auth.currentUser?.photoUrl?.toString())
+    val userPhotoUrl = _userPhotoUrl.asStateFlow()
 
     val totalWealth = walletRepository.getAllWallets()
         .map { wallets -> wallets.sumOf { it.currentBalance } }
@@ -66,9 +69,48 @@ class MoreViewModel @Inject constructor(
             initialValue = false
         )
 
+    val isAnimationsEnabled = settingsRepository.isAnimationsEnabled
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
+
+    val fontScale = settingsRepository.fontScale
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 1.0f
+        )
+
+    val showFloatingCalculator = settingsRepository.showFloatingCalculator
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true
+        )
+
     fun setDarkMode(isDark: Boolean) {
         viewModelScope.launch {
             settingsRepository.setDarkMode(isDark)
+        }
+    }
+
+    fun setAnimationsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setAnimationsEnabled(enabled)
+        }
+    }
+
+    fun setFontScale(scale: Float) {
+        viewModelScope.launch {
+            settingsRepository.setFontScale(scale)
+        }
+    }
+
+    fun setShowFloatingCalculator(show: Boolean) {
+        viewModelScope.launch {
+            settingsRepository.setShowFloatingCalculator(show)
         }
     }
 
@@ -124,6 +166,32 @@ class MoreViewModel @Inject constructor(
                 }
         } else {
             onResult(false, "No authenticated user found.")
+        }
+    }
+
+    fun updateProfileImage(uri: android.net.Uri, context: Context) {
+        viewModelScope.launch {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val file = File(context.filesDir, "profile_pic.jpg")
+                val outputStream = java.io.FileOutputStream(file)
+                inputStream?.copyTo(outputStream)
+                inputStream?.close()
+                outputStream.close()
+                
+                val localUri = android.net.Uri.fromFile(file)
+                val request = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                    .setPhotoUri(localUri)
+                    .build()
+                
+                auth.currentUser?.updateProfile(request)?.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        _userPhotoUrl.value = localUri.toString()
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }

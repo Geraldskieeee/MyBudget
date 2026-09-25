@@ -20,6 +20,7 @@ fun AddGoalScreen(
     var name by remember { mutableStateOf("") }
     var targetAmount by remember { mutableStateOf("") }
     var currentAmount by remember { mutableStateOf("") }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     val isFormValid = name.isNotBlank() && targetAmount.isNotBlank() && targetAmount.toDoubleOrNull() != null && currentAmount.toDoubleOrNull() != null
 
@@ -33,9 +34,9 @@ fun AddGoalScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = androidx.compose.ui.graphics.Color(0xFF32D74B),
+                    titleContentColor = androidx.compose.ui.graphics.Color.Black,
+                    navigationIconContentColor = androidx.compose.ui.graphics.Color.Black
                 )
             )
         }
@@ -48,7 +49,7 @@ fun AddGoalScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -92,21 +93,41 @@ fun AddGoalScreen(
             
             Button(
                 onClick = {
-                    val target = targetAmount.toDoubleOrNull() ?: 0.0
-                    val current = currentAmount.toDoubleOrNull() ?: 0.0
-                    viewModel.addGoal(name, target, current)
-                    onNavigateBack()
+                    showConfirmDialog = true
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
                     .padding(bottom = 8.dp),
                 enabled = isFormValid,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(50)
             ) {
                 Text("Save Goal", style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirm Action") },
+            text = { Text("Are you sure you want to save this goal?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    val target = targetAmount.toDoubleOrNull() ?: 0.0
+                    val current = currentAmount.toDoubleOrNull() ?: 0.0
+                    viewModel.addGoal(name, target, current)
+                    showConfirmDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }

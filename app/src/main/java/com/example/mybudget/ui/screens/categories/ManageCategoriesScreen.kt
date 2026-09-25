@@ -36,8 +36,11 @@ fun ManageCategoriesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Category")
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = androidx.compose.ui.graphics.Color(0xFF32D74B)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Category", tint = androidx.compose.ui.graphics.Color.Black)
             }
         }
     ) { padding ->

@@ -7,8 +7,10 @@ import com.example.mybudget.data.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
+import com.example.mybudget.data.repository.SettingsRepository
 
 import com.example.mybudget.data.repository.BillRepository
 import com.example.mybudget.data.local.entity.Bill
@@ -24,13 +26,16 @@ import java.util.Calendar
 
 import kotlinx.coroutines.launch
 
+import kotlinx.coroutines.flow.first
+
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
     private val billRepository: BillRepository,
     private val goalRepository: GoalRepository,
-    private val debtRepository: DebtRepository
+    private val debtRepository: DebtRepository,
+    private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
     val totalBalance = walletRepository.getAllWallets()
@@ -48,13 +53,22 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val recentTransactions = transactionRepository.getAllTransactions()
-        .map { it.take(5) }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val recentTransactions = combine(
+        transactionRepository.getAllTransactions(),
+        settingsRepository.lastClearedTimestamp
+    ) { transactions, timestamp ->
+        transactions.filter { it.dateTimestamp > timestamp }.take(5)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun clearRecentTransactions() {
+        viewModelScope.launch {
+            settingsRepository.setLastClearedTimestamp(System.currentTimeMillis())
+        }
+    }
 
     val todayExpenses = transactionRepository.getAllTransactions()
         .map { transactions ->
@@ -156,6 +170,41 @@ class HomeViewModel @Inject constructor(
     fun deleteWallet(wallet: Wallet) {
         viewModelScope.launch {
             walletRepository.deleteWallet(wallet)
+        }
+    }
+
+    fun exportWalletDataToCsv(context: android.content.Context, wallet: Wallet, onExportComplete: (android.net.Uri?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val transactions = transactionRepository.getAllTransactions().first()
+                val walletTransactions = transactions.filter { it.walletId == wallet.id }
+                
+                val fileName = "mybudget_${wallet.name.replace(" ", "_")}_${System.currentTimeMillis()}.csv"
+                val file = java.io.File(context.cacheDir, fileName)
+                val writer = java.io.FileWriter(file)
+                
+                writer.append("ID,Amount,Type,Date,Note\n")
+                
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US)
+                
+                walletTransactions.forEach { tx ->
+                    val dateString = sdf.format(java.util.Date(tx.dateTimestamp))
+                    writer.append("${tx.id},${tx.amount},${tx.type.name},$dateString,${tx.note.replace(",", " ")}\n")
+                }
+                
+                writer.flush()
+                writer.close()
+                
+                val uri = androidx.core.content.FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    file
+                )
+                onExportComplete(uri)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onExportComplete(null)
+            }
         }
     }
 }

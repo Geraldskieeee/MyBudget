@@ -1,13 +1,16 @@
 package com.example.mybudget.ui.components
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -31,6 +34,7 @@ import com.example.mybudget.data.local.entity.Wallet
 import com.example.mybudget.ui.theme.RichBlack
 import java.text.NumberFormat
 import java.util.Locale
+import java.text.DecimalFormat
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -40,6 +44,7 @@ fun PhysicalWalletHeader(
     selectedWallets: Set<Long> = emptySet(),
     onWalletClick: (Wallet) -> Unit = {},
     onWalletLongClick: (Wallet) -> Unit = {},
+    onExportWalletClick: (Wallet) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val visibleWallets = wallets.take(5)
@@ -52,6 +57,12 @@ fun PhysicalWalletHeader(
     val totalHeight = pocketOffsetY + pocketHeight
     
     var isBalanceVisible by remember { mutableStateOf(true) }
+    var clickedWalletId by remember { mutableStateOf<Long?>(null) }
+    
+    // Reset clicked state if wallets change or selection mode exits
+    androidx.compose.runtime.LaunchedEffect(wallets, selectedWallets) {
+        if (selectedWallets.isNotEmpty()) clickedWalletId = null
+    }
 
     Box(
         modifier = modifier
@@ -71,9 +82,22 @@ fun PhysicalWalletHeader(
             val isSelected = selectedWallets.contains(wallet.id)
             val color = if (isSelected) baseColor.copy(alpha = 0.5f) else baseColor
             
+            // Animation for click effect
+            val isClicked = clickedWalletId == wallet.id
+            val animatedOffsetY by androidx.compose.animation.core.animateDpAsState(
+                targetValue = if (isClicked) -80.dp else 0.dp,
+                animationSpec = androidx.compose.animation.core.tween(durationMillis = 200, easing = androidx.compose.animation.core.FastOutSlowInEasing),
+                finishedListener = {
+                    if (isClicked) {
+                        onWalletClick(wallet)
+                        clickedWalletId = null
+                    }
+                }
+            )
+            
             Box(
                 modifier = Modifier
-                    .offset(y = cardOffset * index)
+                    .offset(y = (cardOffset * index) + animatedOffsetY)
                     .fillMaxWidth()
                     // Back cards are slightly narrower for perspective
                     .padding(horizontal = ((visibleWallets.size - index) * 6).dp)
@@ -81,7 +105,13 @@ fun PhysicalWalletHeader(
                     .clip(RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp))
                     .background(color)
                     .combinedClickable(
-                        onClick = { onWalletClick(wallet) },
+                        onClick = { 
+                            if (selectedWallets.isEmpty() && clickedWalletId == null) {
+                                clickedWalletId = wallet.id
+                            } else {
+                                onWalletClick(wallet)
+                            }
+                        },
                         onLongClick = { onWalletLongClick(wallet) }
                     )
             ) {
@@ -97,12 +127,37 @@ fun PhysicalWalletHeader(
                         fontWeight = FontWeight.ExtraBold,
                         fontSize = 16.sp
                     )
-                    Text(
-                        text = NumberFormat.getCurrencyInstance(Locale.US).format(wallet.currentBalance),
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp
-                    )
+                    
+                    val formatter = DecimalFormat("₱#,##0.00")
+                    if (wallet.currentBalance % 1.0 == 0.0) {
+                        formatter.applyPattern("₱#,##0")
+                    }
+                    val balanceText = if (isBalanceVisible) {
+                        formatter.format(wallet.currentBalance)
+                    } else {
+                        val digits = wallet.currentBalance.toLong().toString().length
+                        "₱${"*".repeat(digits)}"
+                    }
+                    
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = balanceText,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(
+                            onClick = { onExportWalletClick(wallet) },
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Filled.Share,
+                                contentDescription = "Export Wallet",
+                                tint = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -115,6 +170,10 @@ fun PhysicalWalletHeader(
                 .height(pocketHeight)
                 .clip(RoundedCornerShape(32.dp))
                 .background(RichBlack)
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null
+                ) {}
                 .drawBehind {
                     // Draw stitched border
                     drawRoundRect(
@@ -135,8 +194,20 @@ fun PhysicalWalletHeader(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                val formatter = DecimalFormat("₱#,##0.00")
+                if (totalBalance % 1.0 == 0.0) {
+                    formatter.applyPattern("₱#,##0")
+                }
+                
+                val displayBalance = if (isBalanceVisible) {
+                    formatter.format(totalBalance)
+                } else {
+                    val digits = totalBalance.toLong().toString().length
+                    "₱${"*".repeat(digits)}"
+                }
+                
                 Text(
-                    text = if (isBalanceVisible) NumberFormat.getCurrencyInstance(Locale.US).format(totalBalance) else "****",
+                    text = displayBalance,
                     color = Color.White,
                     fontSize = 36.sp,
                     fontWeight = FontWeight.ExtraBold

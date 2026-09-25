@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mybudget.data.local.entity.TransactionType
@@ -31,7 +32,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.cos
-import kotlin.math.sin
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.TextStyle
+import kotlin.math.max
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,6 +51,7 @@ fun AnalyticsScreen(
     val selectedMonth by viewModel.selectedMonth.collectAsState()
     val selectedType by viewModel.selectedType.collectAsState()
     val categoryTotals by viewModel.categoryTotals.collectAsState()
+    val dailyTotals by viewModel.dailyTotals.collectAsState()
     
     val monthFormat = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
     val currencyFormat = NumberFormat.getCurrencyInstance(Locale.US)
@@ -53,7 +63,9 @@ fun AnalyticsScreen(
             TopAppBar(
                 title = { Text("Analytics", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background
+                    containerColor = Color(0xFF32D74B),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
         }
@@ -113,18 +125,16 @@ fun AnalyticsScreen(
                     Text("No data for this month.", color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
-                // Pie Chart / Donut Chart
+                // Line Chart
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp),
+                        .height(200.dp)
+                        .padding(horizontal = 16.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    DonutChart(
-                        data = categoryTotals.map { it.second.toFloat() },
-                        colors = categoryTotals.mapIndexed { index, _ -> 
-                            Color.hsv((index * 137.5f) % 360f, 0.7f, 0.9f) 
-                        },
+                    LineChart(
+                        data = dailyTotals,
                         totalAmount = totalAmount,
                         currencyFormat = currencyFormat
                     )
@@ -135,7 +145,7 @@ fun AnalyticsScreen(
                 // Category List
                 LazyColumn(
                     modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 120.dp)
                 ) {
                     items(categoryTotals) { (category, amount) ->
                         val color = Color.hsv((categoryTotals.indexOfFirst { it.first == category } * 137.5f) % 360f, 0.7f, 0.9f)
@@ -213,15 +223,16 @@ fun AnalyticsScreen(
 }
 
 @Composable
-fun DonutChart(
+fun LineChart(
     data: List<Float>,
-    colors: List<Color>,
     totalAmount: Double,
     currencyFormat: NumberFormat
 ) {
+    if (data.isEmpty()) return
+    
     var animationPlayed by remember { mutableStateOf(false) }
-    val animateSweep by animateFloatAsState(
-        targetValue = if (animationPlayed) 360f else 0f,
+    val animateProgress by animateFloatAsState(
+        targetValue = if (animationPlayed) 1f else 0f,
         animationSpec = tween(durationMillis = 1500)
     )
     
@@ -229,43 +240,154 @@ fun DonutChart(
         animationPlayed = true
     }
 
-    Box(contentAlignment = Alignment.Center) {
-        Canvas(
-            modifier = Modifier.size(200.dp)
-        ) {
-            val strokeWidth = 32.dp.toPx()
-            var startAngle = -90f
-            
-            val total = data.sum()
-            
-            for (i in data.indices) {
-                val sweepAngle = (data[i] / total) * animateSweep
-                drawArc(
-                    color = colors[i],
-                    startAngle = startAngle,
-                    sweepAngle = sweepAngle,
-                    useCenter = false,
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(
-                        width = strokeWidth,
-                        cap = androidx.compose.ui.graphics.StrokeCap.Round
-                    ),
-                    size = Size(size.width - strokeWidth, size.height - strokeWidth),
-                    topLeft = Offset(strokeWidth / 2, strokeWidth / 2)
-                )
-                startAngle += sweepAngle
-            }
-        }
+    val maxAmount = max(data.maxOrNull() ?: 1f, 1f)
+    val textMeasurer = rememberTextMeasurer()
+    val onSurfaceVariant = MaterialTheme.colorScheme.onSurfaceVariant
+    val gridColor = onSurfaceVariant.copy(alpha = 0.1f)
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()) {
+        Text(
+            text = "Total for Month",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = currencyFormat.format(totalAmount),
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Spacer(modifier = Modifier.height(24.dp))
         
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "Total",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .padding(bottom = 16.dp, start = 8.dp, end = 8.dp)
+        ) {
+            if (data.isEmpty()) return@Canvas
+            
+            val canvasWidth = size.width
+            val canvasHeight = size.height
+            val pointSpacing = canvasWidth / (data.size - 1).coerceAtLeast(1)
+            val strokeWidth = 4.dp.toPx()
+            
+            // Draw 3 horizontal grid lines (0, 50%, 100%)
+            for (i in 0..2) {
+                val y = canvasHeight - (canvasHeight * (i / 2f))
+                drawLine(
+                    color = gridColor,
+                    start = Offset(0f, y),
+                    end = Offset(canvasWidth, y),
+                    strokeWidth = 1.dp.toPx()
+                )
+                // Draw Y-axis labels
+                val labelAmount = maxAmount * (i / 2f)
+                val formattedLabel = if (labelAmount >= 1000) {
+                    "$${String.format("%.1fk", labelAmount / 1000)}"
+                } else {
+                    "$${labelAmount.toInt()}"
+                }
+                
+                drawText(
+                    textMeasurer = textMeasurer,
+                    text = formattedLabel,
+                    style = TextStyle(color = onSurfaceVariant, fontSize = 10.sp),
+                    topLeft = Offset(0f, y - 16.dp.toPx())
+                )
+            }
+            
+            val path = Path()
+            
+            var previousPointX = 0f
+            var previousPointY = canvasHeight - (data.first() / maxAmount) * canvasHeight * animateProgress
+            
+            path.moveTo(previousPointX, previousPointY)
+            
+            val dataPoints = mutableListOf(Offset(previousPointX, previousPointY))
+            
+            for (i in 1 until data.size) {
+                val currentPointX = i * pointSpacing
+                val currentPointY = canvasHeight - (data[i] / maxAmount) * canvasHeight * animateProgress
+                
+                val controlPointX = (previousPointX + currentPointX) / 2
+                
+                path.cubicTo(
+                    controlPointX, previousPointY,
+                    controlPointX, currentPointY,
+                    currentPointX, currentPointY
+                )
+                
+                dataPoints.add(Offset(currentPointX, currentPointY))
+                previousPointX = currentPointX
+                previousPointY = currentPointY
+            }
+            
+            val brush = Brush.linearGradient(
+                colors = listOf(Color(0xFF6C63FF), Color(0xFF32D74B))
             )
-            Text(
-                text = currencyFormat.format(totalAmount),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.ExtraBold
+            
+            drawPath(
+                path = path,
+                brush = brush,
+                style = Stroke(
+                    width = strokeWidth,
+                    cap = StrokeCap.Round,
+                    join = StrokeJoin.Round
+                )
+            )
+            
+            val fillPath = Path().apply {
+                addPath(path)
+                lineTo(canvasWidth, canvasHeight)
+                lineTo(0f, canvasHeight)
+                close()
+            }
+            
+            drawPath(
+                path = fillPath,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFF6C63FF).copy(alpha = 0.3f),
+                        Color.Transparent
+                    )
+                )
+            )
+            
+            // Draw points on days that have transactions
+            for (i in data.indices) {
+                if (data[i] > 0f) {
+                    drawCircle(
+                        color = Color.White,
+                        radius = 6.dp.toPx() * animateProgress,
+                        center = dataPoints[i]
+                    )
+                    drawCircle(
+                        color = Color(0xFF6C63FF),
+                        radius = 4.dp.toPx() * animateProgress,
+                        center = dataPoints[i]
+                    )
+                }
+            }
+            
+            // Draw X-axis labels (Start, Middle, End of month)
+            drawText(
+                textMeasurer = textMeasurer,
+                text = "1st",
+                style = TextStyle(color = onSurfaceVariant, fontSize = 10.sp),
+                topLeft = Offset(0f, canvasHeight + 4.dp.toPx())
+            )
+            val midDay = data.size / 2
+            drawText(
+                textMeasurer = textMeasurer,
+                text = "${midDay}th",
+                style = TextStyle(color = onSurfaceVariant, fontSize = 10.sp),
+                topLeft = Offset((canvasWidth / 2f) - 12.dp.toPx(), canvasHeight + 4.dp.toPx())
+            )
+            drawText(
+                textMeasurer = textMeasurer,
+                text = "${data.size}th",
+                style = TextStyle(color = onSurfaceVariant, fontSize = 10.sp),
+                topLeft = Offset(canvasWidth - 24.dp.toPx(), canvasHeight + 4.dp.toPx())
             )
         }
     }

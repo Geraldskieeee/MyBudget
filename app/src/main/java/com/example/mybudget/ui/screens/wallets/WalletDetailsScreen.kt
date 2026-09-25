@@ -37,6 +37,7 @@ fun WalletDetailsScreen(
 ) {
     val wallet by viewModel.wallet.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val allWallets by viewModel.allWallets.collectAsState()
 
     val formatter = DecimalFormat("#,###.##")
     val dateFormatter = SimpleDateFormat("MM/dd/yy", Locale.getDefault())
@@ -52,23 +53,25 @@ fun WalletDetailsScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF32D74B),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
         }
     ) { padding ->
         if (wallet == null) return@Scaffold
 
-        val blocks = remember(transactions, wallet) {
+        val blocks = remember(transactions, wallet, allWallets) {
             val sortedTransactions = transactions.sortedBy { it.dateTimestamp }
             val result = mutableListOf<LedgerBlock>()
             var currentRunningBalance = wallet!!.startingBalance
             var currentExpenseGroup = mutableListOf<Transaction>()
 
             for (t in sortedTransactions) {
-                if (t.type == TransactionType.INCOME) {
+                val isIncome = t.type == TransactionType.INCOME || (t.type == TransactionType.TRANSFER && t.toWalletId == wallet!!.id)
+                
+                if (isIncome) {
                     if (currentExpenseGroup.isNotEmpty()) {
                         val groupTotal = currentExpenseGroup.sumOf { it.amount }
                         currentRunningBalance -= groupTotal
@@ -79,7 +82,8 @@ fun WalletDetailsScreen(
                     
                     val old = currentRunningBalance
                     currentRunningBalance += t.amount
-                    result.add(IncomeBlock(old, t.amount, currentRunningBalance))
+                    val dateStr = dateFormatter.format(Date(t.dateTimestamp))
+                    result.add(IncomeBlock(dateStr, old, t, currentRunningBalance))
                 } else {
                     if (currentExpenseGroup.isNotEmpty()) {
                         val lastDate = dateFormatter.format(Date(currentExpenseGroup.last().dateTimestamp))
@@ -161,10 +165,33 @@ fun WalletDetailsScreen(
                                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                             ) {
                                 Column(modifier = Modifier.padding(16.dp)) {
+                                    Text(
+                                        text = block.dateStr,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    val t = block.transaction
+                                    val sourceWalletName = allWallets.find { it.id == t.walletId }?.name ?: "Unknown Wallet"
+                                    
+                                    val title = if (t.type == TransactionType.TRANSFER) {
+                                        "Transfer from $sourceWalletName"
+                                    } else {
+                                        "Income Added"
+                                    }
+                                    
+                                    val subtitle = if (t.note.isNotEmpty()) t.note else ""
+                                    
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Icon(Icons.Filled.AddCircle, contentDescription = "Income", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Income Added", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                        Column {
+                                            Text(title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                                            if (subtitle.isNotEmpty()) {
+                                                Text(subtitle, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                                            }
+                                        }
                                     }
                                     Spacer(modifier = Modifier.height(12.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -174,7 +201,7 @@ fun WalletDetailsScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                         Text(text = "Income Amount", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-                                        Text(text = "+ ₱${formatter.format(block.incomeAmount)}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                        Text(text = "+ ₱${formatter.format(t.amount)}", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                                     }
                                     Spacer(modifier = Modifier.height(12.dp))
                                     HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
@@ -204,7 +231,14 @@ fun WalletDetailsScreen(
                                     
                                     block.expenses.forEach { transaction ->
                                         val amount = transaction.amount
-                                        val note = transaction.note.ifEmpty { transaction.type.name.lowercase().replaceFirstChar { it.uppercase() } }
+                                        val destWalletName = allWallets.find { it.id == transaction.toWalletId }?.name ?: "Unknown Wallet"
+                                        
+                                        val finalNote = if (transaction.type == TransactionType.TRANSFER) {
+                                            if (transaction.note.isNotEmpty()) "${transaction.note} To $destWalletName" else "Transfer to $destWalletName"
+                                        } else {
+                                            transaction.note.ifEmpty { transaction.type.name.lowercase().replaceFirstChar { it.uppercase() } }
+                                        }
+                                        
                                         val timeStr = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date(transaction.dateTimestamp))
                                         
                                         Row(
@@ -212,11 +246,11 @@ fun WalletDetailsScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
-                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                                                 Icon(Icons.Filled.RemoveCircle, contentDescription = "Expense", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                                                 Spacer(modifier = Modifier.width(8.dp))
                                                 Column {
-                                                    Text(text = note, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyLarge)
+                                                    Text(text = finalNote, color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyLarge)
                                                     Text(text = timeStr, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                                 }
                                             }
@@ -255,5 +289,5 @@ fun WalletDetailsScreen(
 
 
 sealed class LedgerBlock
-data class IncomeBlock(val oldBalance: Double, val incomeAmount: Double, val newBalance: Double) : LedgerBlock()
+data class IncomeBlock(val dateStr: String, val oldBalance: Double, val transaction: Transaction, val newBalance: Double) : LedgerBlock()
 data class ExpenseGroupBlock(val dateStr: String, val expenses: List<Transaction>, val groupTotal: Double, val newBalance: Double) : LedgerBlock()

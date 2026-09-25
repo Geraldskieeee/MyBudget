@@ -57,7 +57,7 @@ class LoginViewModel @Inject constructor(
             }
     }
 
-    fun createAccountWithEmail(email: String, pass: String) {
+    fun createAccountWithEmail(email: String, pass: String, username: String = "") {
         if (email.isBlank() || pass.isBlank()) {
             _signInState.value = SignInState.Error("Email and password cannot be empty")
             return
@@ -70,7 +70,17 @@ class LoginViewModel @Inject constructor(
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, pass)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    _signInState.value = SignInState.Success
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (username.isNotBlank() && user != null) {
+                        val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                            .setDisplayName(username)
+                            .build()
+                        user.updateProfile(profileUpdates).addOnCompleteListener {
+                            _signInState.value = SignInState.Success
+                        }
+                    } else {
+                        _signInState.value = SignInState.Success
+                    }
                 } else {
                     _signInState.value = SignInState.Error(task.exception?.message ?: "Account creation failed")
                 }

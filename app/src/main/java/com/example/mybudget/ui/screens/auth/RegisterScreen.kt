@@ -23,6 +23,7 @@ fun RegisterScreen(
 ) {
     val signInState by viewModel.signInState.collectAsState()
     
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
@@ -65,6 +66,16 @@ fun RegisterScreen(
             )
             
             Spacer(modifier = Modifier.height(32.dp))
+
+            OutlinedTextField(
+                value = username,
+                onValueChange = { username = it },
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = email,
@@ -138,7 +149,11 @@ fun RegisterScreen(
                 Button(
                     onClick = { 
                         if (termsAccepted) {
-                            viewModel.createAccountWithEmail(email, password)
+                            if (username.isBlank()) {
+                                android.widget.Toast.makeText(context, "Please enter a username.", android.widget.Toast.LENGTH_SHORT).show()
+                            } else {
+                                viewModel.createAccountWithEmail(email, password, username)
+                            }
                         } else {
                             android.widget.Toast.makeText(context, "Please agree to the Terms and Conditions first.", android.widget.Toast.LENGTH_SHORT).show()
                         }

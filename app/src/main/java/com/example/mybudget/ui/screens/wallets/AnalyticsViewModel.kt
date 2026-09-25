@@ -58,6 +58,39 @@ class AnalyticsViewModel @Inject constructor(
         totals.toList().sortedByDescending { it.second }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val dailyTotals = combine(transactions, selectedMonth, selectedType) { txs, month, type ->
+        val daysInMonth = month.getActualMaximum(Calendar.DAY_OF_MONTH)
+        val dailySums = FloatArray(daysInMonth) { 0f }
+
+        val monthStart = (month.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val monthEnd = (month.clone() as Calendar).apply {
+            set(Calendar.DAY_OF_MONTH, getActualMaximum(Calendar.DAY_OF_MONTH))
+            set(Calendar.HOUR_OF_DAY, 23)
+            set(Calendar.MINUTE, 59)
+            set(Calendar.SECOND, 59)
+            set(Calendar.MILLISECOND, 999)
+        }.timeInMillis
+
+        val filteredTxs = txs.filter { it.type == type && it.dateTimestamp in monthStart..monthEnd }
+        
+        filteredTxs.forEach { tx ->
+            val cal = Calendar.getInstance().apply { timeInMillis = tx.dateTimestamp }
+            val day = cal.get(Calendar.DAY_OF_MONTH)
+            if (day in 1..daysInMonth) {
+                dailySums[day - 1] += tx.amount.toFloat()
+            }
+        }
+        
+        dailySums.toList()
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     fun nextMonth() {
         _selectedMonth.update { cal ->
             (cal.clone() as Calendar).apply { add(Calendar.MONTH, 1) }

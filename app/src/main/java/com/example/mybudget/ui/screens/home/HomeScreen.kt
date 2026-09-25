@@ -54,6 +54,7 @@ fun HomeScreen(
 ) {
     val totalBalance by viewModel.totalBalance.collectAsState()
     val recentTransactions by viewModel.recentTransactions.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     
     val todayExpenses by viewModel.todayExpenses.collectAsState()
     
@@ -99,12 +100,11 @@ fun HomeScreen(
                 TopAppBar(
                     title = { Text("Dashboard", fontWeight = FontWeight.Bold) },
                     actions = {
-                        IconButton(onClick = onAddWalletClick) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add Wallet")
-                        }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+                        containerColor = Color(0xFF32D74B),
+                        titleContentColor = Color.Black,
+                        actionIconContentColor = Color.Black
                     )
                 )
             }
@@ -115,7 +115,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
             // 1. Total Balance Card
             item {
@@ -170,6 +170,18 @@ fun HomeScreen(
                                 isWalletSelectionMode = true
                                 selectedWallets += wallet.id
                             }
+                        },
+                        onExportWalletClick = { wallet ->
+                            viewModel.exportWalletDataToCsv(context, wallet) { uri ->
+                                if (uri != null) {
+                                    val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+                                        type = "text/csv"
+                                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
+                                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    }
+                                    context.startActivity(android.content.Intent.createChooser(intent, "Export Wallet Transactions"))
+                                }
+                            }
                         }
                     )
                 }
@@ -208,25 +220,44 @@ fun HomeScreen(
 
             // 5. Recent Transactions Header
             item {
-                Text(
-                    text = "Recent Transactions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recent Transactions",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    if (recentTransactions.isNotEmpty()) {
+                        TextButton(onClick = { viewModel.clearRecentTransactions() }) {
+                            Text("Clear", color = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                }
             }
             
             // 6. Transactions List
             if (recentTransactions.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier.fillMaxWidth().padding(32.dp),
-                        contentAlignment = Alignment.Center
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                        shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text(
-                            text = "No recent transactions",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "No recent transactions",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             } else {
@@ -299,7 +330,7 @@ fun BalanceCard(balance: Double) {
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "₱${String.format(java.util.Locale.US, "%.2f", balance)}",
+                    text = "₱${String.format(java.util.Locale.US, "%,.2f", balance)}",
                     color = Color.White,
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold
@@ -325,7 +356,7 @@ fun TodayExpensesCard(expenses: Double) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Spent Today", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.height(4.dp))
-                Text("₱${String.format(java.util.Locale.US, "%.2f", expenses)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                Text("₱${String.format(java.util.Locale.US, "%,.2f", expenses)}", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -357,9 +388,6 @@ fun SavingsProgress(goal: Goal?, onAddClick: () -> Unit, onDeleteClick: (Goal) -
                         Text("Savings Goal: ${goal.name}", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     }
                     Row {
-                        IconButton(onClick = onAddClick) {
-                            Icon(Icons.Filled.Add, contentDescription = "Add Goal", tint = MaterialTheme.colorScheme.tertiary)
-                        }
                         if (showDelete) {
                             var showGoalDeleteDialog by remember { mutableStateOf(false) }
                             IconButton(onClick = { 
@@ -407,22 +435,19 @@ fun SavingsProgress(goal: Goal?, onAddClick: () -> Unit, onDeleteClick: (Goal) -
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("₱${String.format(java.util.Locale.US, "%.0f", goal.currentAmount)} saved", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("₱${String.format(java.util.Locale.US, "%.0f", goal.targetAmount)} goal", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("₱${String.format(java.util.Locale.US, "%,.0f", goal.currentAmount)} saved", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("₱${String.format(java.util.Locale.US, "%,.0f", goal.targetAmount)} goal", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Savings, contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Icon(Icons.Filled.Savings, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text("No Savings Goal", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     }
-                    IconButton(onClick = onAddClick) {
-                        Icon(Icons.Filled.Add, contentDescription = "Add Goal", tint = MaterialTheme.colorScheme.tertiary)
-                    }
                 }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text("Tap the + button to add a new savings goal.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Tap the + button below to add a new savings goal.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 36.dp))
             }
         }
     }
@@ -442,17 +467,32 @@ fun UpcomingBillsSection(bills: List<Bill>, onAddClick: () -> Unit, onDeleteClic
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = onAddClick) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Bill", tint = MaterialTheme.colorScheme.primary)
-            }
         }
         
         if (bills.isEmpty()) {
-            Text(
-                text = "No upcoming bills.",
-                modifier = Modifier.padding(start = 16.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "No upcoming bills.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    TextButton(onClick = onAddClick) {
+                        Text("Add Bill")
+                    }
+                }
+            }
         } else {
             LazyRow(
             contentPadding = PaddingValues(horizontal = 16.dp),
@@ -475,7 +515,7 @@ fun UpcomingBillsSection(bills: List<Bill>, onAddClick: () -> Unit, onDeleteClic
                         Text(bill.dueDate, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Spacer(modifier = Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("₱${String.format(java.util.Locale.US, "%.2f", bill.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                            Text("₱${String.format(java.util.Locale.US, "%,.2f", bill.amount)}", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
                             if (showDelete) {
                                 var showBillDeleteDialog by remember { mutableStateOf(false) }
                                 IconButton(onClick = { showBillDeleteDialog = true }, modifier = Modifier.size(24.dp)) {
@@ -535,17 +575,32 @@ fun DebtsSection(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            IconButton(onClick = onAddClick) {
-                Icon(Icons.Filled.Add, contentDescription = "Add Debt", tint = MaterialTheme.colorScheme.primary)
-            }
         }
         
         if (debts.isEmpty()) {
-            Text(
-                text = "No debts recorded.",
-                modifier = Modifier.padding(start = 16.dp),
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "No debts recorded.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    TextButton(onClick = onAddClick) {
+                        Text("Add Debt")
+                    }
+                }
+            }
         } else {
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -607,7 +662,7 @@ fun DebtsSection(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("₱${String.format(java.util.Locale.US, "%.2f", debt.amount)}", color = contentColor, fontWeight = FontWeight.Bold)
+                                Text("₱${String.format(java.util.Locale.US, "%,.2f", debt.amount)}", color = contentColor, fontWeight = FontWeight.Bold)
                                 
                                 Button(
                                     onClick = { debtToSettle = debt },
@@ -651,7 +706,7 @@ fun DebtsSection(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
                                         Text(wallet.name, style = MaterialTheme.typography.bodyMedium)
-                                        Text("Balance: ₱${String.format(java.util.Locale.US, "%.2f", wallet.currentBalance)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        Text("Balance: ₱${String.format(java.util.Locale.US, "%,.2f", wallet.currentBalance)}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                                 }
                             }

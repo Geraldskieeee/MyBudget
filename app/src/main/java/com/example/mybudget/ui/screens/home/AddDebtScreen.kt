@@ -23,6 +23,7 @@ fun AddDebtScreen(
     var dueDate by remember { mutableStateOf("") }
     var notes by remember { mutableStateOf("") }
     var type by remember { mutableStateOf(DebtType.OWED_BY_ME) }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -34,9 +35,9 @@ fun AddDebtScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = androidx.compose.ui.graphics.Color(0xFF32D74B),
+                    titleContentColor = androidx.compose.ui.graphics.Color.Black,
+                    navigationIconContentColor = androidx.compose.ui.graphics.Color.Black
                 )
             )
         }
@@ -49,7 +50,7 @@ fun AddDebtScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -121,14 +122,7 @@ fun AddDebtScreen(
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank() && dueDate.isNotBlank()) {
-                        viewModel.addDebt(
-                            name = name,
-                            amount = amount.toDoubleOrNull() ?: 0.0,
-                            type = type,
-                            dueDate = dueDate,
-                            notes = notes
-                        )
-                        onNavigateBack()
+                        showConfirmDialog = true
                     }
                 },
                 modifier = Modifier
@@ -136,11 +130,38 @@ fun AddDebtScreen(
                     .height(56.dp)
                     .padding(bottom = 8.dp),
                 enabled = name.isNotBlank() && amount.isNotBlank() && dueDate.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(50)
             ) {
                 Text("Save Debt", style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirm Action") },
+            text = { Text("Are you sure you want to save this debt?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.addDebt(
+                        name = name,
+                        amount = amount.toDoubleOrNull() ?: 0.0,
+                        type = type,
+                        dueDate = dueDate,
+                        notes = notes
+                    )
+                    showConfirmDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }

@@ -9,6 +9,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,7 +26,7 @@ import com.example.mybudget.data.local.entity.TransactionType
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(
     onAddTransaction: () -> Unit,
@@ -33,18 +39,11 @@ fun TransactionsScreen(
             TopAppBar(
                 title = { Text("Transactions") },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF32D74B),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
-        },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTransaction,
-                containerColor = MaterialTheme.colorScheme.primary
-            ) {
-                Icon(Icons.Filled.Add, "Add Transaction", tint = MaterialTheme.colorScheme.onPrimary)
-            }
         }
     ) { padding ->
         if (transactions.isEmpty()) {
@@ -67,10 +66,22 @@ fun TransactionsScreen(
                     .padding(padding)
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
-                contentPadding = PaddingValues(vertical = 16.dp)
+                contentPadding = PaddingValues(top = 16.dp, bottom = 120.dp)
             ) {
-                items(transactions) { transaction ->
-                    TransactionItem(transaction = transaction)
+                items(transactions, key = { it.id }) { transaction ->
+                    var showDelete by remember { mutableStateOf(false) }
+                    
+                    Box(
+                        modifier = Modifier.combinedClickable(
+                            onClick = { showDelete = false },
+                            onLongClick = { showDelete = true }
+                        )
+                    ) {
+                        TransactionItem(transaction = transaction, showDelete = showDelete, onDelete = { 
+                            viewModel.deleteTransaction(it)
+                            showDelete = false
+                        })
+                    }
                 }
             }
         }
@@ -78,7 +89,7 @@ fun TransactionsScreen(
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction) {
+fun TransactionItem(transaction: Transaction, showDelete: Boolean = false, onDelete: (Transaction) -> Unit = {}) {
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     val dateString = dateFormatter.format(Date(transaction.dateTimestamp))
 
@@ -119,12 +130,42 @@ fun TransactionItem(transaction: Transaction) {
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Text(
-                text = "$sign₱${String.format(java.util.Locale.US, "%.2f", transaction.amount)}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = "$sign₱${String.format(java.util.Locale.US, "%,.2f", transaction.amount)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+                if (showDelete) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    var showConfirmDialog by remember { mutableStateOf(false) }
+                    IconButton(onClick = { showConfirmDialog = true }, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                    }
+                    
+                    if (showConfirmDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showConfirmDialog = false },
+                            title = { Text("Delete Transaction") },
+                            text = { Text("Are you sure you want to delete this transaction?") },
+                            confirmButton = {
+                                TextButton(onClick = {
+                                    onDelete(transaction)
+                                    showConfirmDialog = false
+                                }) {
+                                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                                }
+                            },
+                            dismissButton = {
+                                TextButton(onClick = { showConfirmDialog = false }) {
+                                    Text("Cancel")
+                                }
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

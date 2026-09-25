@@ -5,6 +5,8 @@ import com.example.mybudget.data.local.entity.TransactionType
 import com.example.mybudget.data.local.entity.Wallet
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Filter
+import com.google.firebase.firestore.FieldValue
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -29,6 +31,10 @@ class TransactionRepository @Inject constructor(
     private val walletsCollection
         get() = userDoc.collection("wallets")
 
+    private var lastAddedTransaction: Transaction? = null
+
+    fun getLastAddedTransaction(): Transaction? = lastAddedTransaction
+
     fun getAllTransactions(): Flow<List<Transaction>> = callbackFlow {
         val subscription = transactionsCollection.addSnapshotListener { snapshot, error ->
             if (error != null) {
@@ -43,7 +49,10 @@ class TransactionRepository @Inject constructor(
 
     fun getTransactionsByWallet(walletId: Long): Flow<List<Transaction>> = callbackFlow {
         val subscription = transactionsCollection
-            .whereEqualTo("walletId", walletId)
+            .where(Filter.or(
+                Filter.equalTo("walletId", walletId),
+                Filter.equalTo("toWalletId", walletId)
+            ))
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
                     close(error)
@@ -69,25 +78,80 @@ class TransactionRepository @Inject constructor(
         val sourceWalletRef = walletsCollection.document(newTx.walletId.toString())
         val destWalletRef = newTx.toWalletId?.let { walletsCollection.document(it.toString()) }
 
-        firestore.runTransaction { transactionFirestore ->
-            // Update source wallet
-            val sourceWalletSnapshot = transactionFirestore.get(sourceWalletRef)
-            val sourceWallet = sourceWalletSnapshot.toObject(Wallet::class.java)
-            if (sourceWallet != null) {
-                transactionFirestore.set(sourceWalletRef, sourceWallet.copy(currentBalance = sourceWallet.currentBalance + amountModifier))
-            }
+        val batch = firestore.batch()
+        
+        // Save the transaction
+        batch.set(txDocRef, newTx)
+        
+        // Update source wallet
+        batch.update(sourceWalletRef, "currentBalance", FieldValue.increment(amountModifier))
+        
+        // Update destination wallet if transfer
+        if (newTx.type == TransactionType.TRANSFER && destWalletRef != null) {
+            batch.update(destWalletRef, "currentBalance", FieldValue.increment(newTx.amount))
+        }
 
-            // Update destination wallet if transfer
-            if (newTx.type == TransactionType.TRANSFER && destWalletRef != null) {
-                val destWalletSnapshot = transactionFirestore.get(destWalletRef)
-                val destWallet = destWalletSnapshot.toObject(Wallet::class.java)
-                if (destWallet != null) {
-                    transactionFirestore.set(destWalletRef, destWallet.copy(currentBalance = destWallet.currentBalance + newTx.amount))
-                }
-            }
+        batch.commit().await()
+        lastAddedTransaction = newTx
+    }
 
-            // Save the transaction
-            transactionFirestore.set(txDocRef, newTx)
-        }.await()
+    suspend fun undoLastTransaction() {
+        val tx = lastAddedTransaction ?: return
+        
+        val amountModifier = when (tx.type) {
+            TransactionType.INCOME -> -tx.amount
+            TransactionType.EXPENSE -> tx.amount
+            TransactionType.TRANSFER -> tx.amount
+        }
+        
+        val txDocRef = transactionsCollection.document(tx.id.toString())
+        val sourceWalletRef = walletsCollection.document(tx.walletId.toString())
+        val destWalletRef = tx.toWalletId?.let { walletsCollection.document(it.toString()) }
+
+        val batch = firestore.batch()
+        
+        // Delete the transaction
+        batch.delete(txDocRef)
+        
+        // Reverse source wallet balance
+        batch.update(sourceWalletRef, "currentBalance", FieldValue.increment(amountModifier))
+        
+        // Reverse destination wallet balance if transfer
+        if (tx.type == TransactionType.TRANSFER && destWalletRef != null) {
+            batch.update(destWalletRef, "currentBalance", FieldValue.increment(-tx.amount))
+        }
+
+        batch.commit().await()
+        lastAddedTransaction = null
+    }
+
+    suspend fun deleteTransaction(tx: Transaction) {
+        val amountModifier = when (tx.type) {
+            TransactionType.INCOME -> -tx.amount
+            TransactionType.EXPENSE -> tx.amount
+            TransactionType.TRANSFER -> tx.amount
+        }
+        
+        val txDocRef = transactionsCollection.document(tx.id.toString())
+        val sourceWalletRef = walletsCollection.document(tx.walletId.toString())
+        val destWalletRef = tx.toWalletId?.let { walletsCollection.document(it.toString()) }
+
+        val batch = firestore.batch()
+        
+        // Delete the transaction
+        batch.delete(txDocRef)
+        
+        // Reverse source wallet balance
+        batch.update(sourceWalletRef, "currentBalance", FieldValue.increment(amountModifier))
+        
+        // Reverse destination wallet balance if transfer
+        if (tx.type == TransactionType.TRANSFER && destWalletRef != null) {
+            batch.update(destWalletRef, "currentBalance", FieldValue.increment(-tx.amount))
+        }
+
+        batch.commit().await()
+        if (lastAddedTransaction?.id == tx.id) {
+            lastAddedTransaction = null
+        }
     }
 }

@@ -70,4 +70,20 @@ class TransactionViewModel @Inject constructor(
             transactionRepository.addTransaction(transaction)
         }
     }
+
+    fun addCategory(name: String, type: TransactionType) {
+        viewModelScope.launch {
+            val category = com.example.mybudget.data.local.entity.Category(
+                name = name,
+                type = type
+            )
+            categoryRepository.addCategory(category)
+        }
+    }
+
+    fun deleteTransaction(transaction: Transaction) {
+        viewModelScope.launch {
+            transactionRepository.deleteTransaction(transaction)
+        }
+    }
 }

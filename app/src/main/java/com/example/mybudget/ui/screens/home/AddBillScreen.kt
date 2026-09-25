@@ -20,6 +20,7 @@ fun AddBillScreen(
     var name by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var dueDate by remember { mutableStateOf("") }
+    var showConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -31,9 +32,9 @@ fun AddBillScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = androidx.compose.ui.graphics.Color(0xFF32D74B),
+                    titleContentColor = androidx.compose.ui.graphics.Color.Black,
+                    navigationIconContentColor = androidx.compose.ui.graphics.Color.Black
                 )
             )
         }
@@ -46,7 +47,7 @@ fun AddBillScreen(
         ) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -91,12 +92,7 @@ fun AddBillScreen(
             Button(
                 onClick = {
                     if (name.isNotBlank() && amount.isNotBlank() && dueDate.isNotBlank()) {
-                        viewModel.addBill(
-                            name = name,
-                            amount = amount.toDoubleOrNull() ?: 0.0,
-                            due = dueDate
-                        )
-                        onNavigateBack()
+                        showConfirmDialog = true
                     }
                 },
                 modifier = Modifier
@@ -104,11 +100,36 @@ fun AddBillScreen(
                     .height(56.dp)
                     .padding(bottom = 8.dp),
                 enabled = name.isNotBlank() && amount.isNotBlank() && dueDate.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(50)
             ) {
                 Text("Save Bill", style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+    
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirm Action") },
+            text = { Text("Are you sure you want to save this bill?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.addBill(
+                        name = name,
+                        amount = amount.toDoubleOrNull() ?: 0.0,
+                        due = dueDate
+                    )
+                    showConfirmDialog = false
+                    onNavigateBack()
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }

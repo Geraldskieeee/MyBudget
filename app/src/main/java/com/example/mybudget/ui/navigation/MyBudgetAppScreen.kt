@@ -1,6 +1,8 @@
 package com.example.mybudget.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -11,9 +13,26 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mybudget.ui.components.BottomNavBar
+import com.example.mybudget.ui.components.FloatingCalculator
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import com.example.mybudget.ui.screens.auth.LoginScreen
 import com.example.mybudget.ui.screens.auth.RegisterScreen
 import com.example.mybudget.ui.screens.auth.LoginViewModel
@@ -44,6 +63,37 @@ fun MyBudgetAppScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isUserLoggedIn by mainViewModel.isUserLoggedIn.collectAsState()
+    val isAnimationsEnabled by mainViewModel.isAnimationsEnabled.collectAsState()
+
+    val showFloatingCalculator by mainViewModel.showFloatingCalculator.collectAsState()
+    val fontScale by mainViewModel.fontScale.collectAsState()
+    val context = LocalContext.current
+    
+    var showExitDialog by remember { mutableStateOf(false) }
+
+
+
+    androidx.compose.runtime.LaunchedEffect(isUserLoggedIn) {
+        if (isUserLoggedIn == true) {
+            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                try {
+                    com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                        .collection("users")
+                        .document(user.uid)
+                        .set(
+                            mapOf(
+                                "email" to (user.email ?: "Unknown"),
+                                "lastActive" to System.currentTimeMillis()
+                            ),
+                            com.google.firebase.firestore.SetOptions.merge()
+                        )
+                } catch (e: Exception) {
+                    // Ignore, we don't want to crash the app if analytics fail
+                }
+            }
+        }
+    }
 
     // Loading state
     if (isUserLoggedIn == null) {
@@ -58,18 +108,35 @@ fun MyBudgetAppScreen(
         Screen.More.route
     ) && isUserLoggedIn == true
 
-    Scaffold(
-        bottomBar = {
-            if (showBottomBar) {
-                BottomNavBar(navController = navController)
+    val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+    val customDensity = androidx.compose.ui.unit.Density(
+        density = currentDensity.density,
+        fontScale = fontScale
+    )
+
+    androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.ui.platform.LocalDensity provides customDensity
+    ) {
+        Scaffold(
+            bottomBar = {
+                if (showBottomBar) {
+                    BottomNavBar(
+                        navController = navController,
+                        isAnimationsEnabled = isAnimationsEnabled
+                    )
+                }
             }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = if (isUserLoggedIn == true) Screen.Home.route else Screen.Login.route,
-            modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding())
-        ) {
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+            NavHost(
+                navController = navController,
+                startDestination = if (isUserLoggedIn == true) Screen.Home.route else Screen.Login.route,
+                modifier = Modifier.fillMaxSize(),
+                enterTransition = { if (isAnimationsEnabled) fadeIn(animationSpec = tween(300)) else EnterTransition.None },
+                exitTransition = { if (isAnimationsEnabled) fadeOut(animationSpec = tween(300)) else ExitTransition.None },
+                popEnterTransition = { if (isAnimationsEnabled) fadeIn(animationSpec = tween(300)) else EnterTransition.None },
+                popExitTransition = { if (isAnimationsEnabled) fadeOut(animationSpec = tween(300)) else ExitTransition.None }
+            ) {
             composable(Screen.Login.route) {
                 val viewModel: LoginViewModel = hiltViewModel()
                 LoginScreen(
@@ -99,6 +166,9 @@ fun MyBudgetAppScreen(
                 )
             }
             composable(Screen.Home.route) {
+                BackHandler(enabled = true) {
+                    showExitDialog = true
+                }
                 val viewModel: HomeViewModel = hiltViewModel()
                 HomeScreen(
                     viewModel = viewModel,
@@ -137,7 +207,23 @@ fun MyBudgetAppScreen(
                     },
                     onManageCategoriesClick = {
                         navController.navigate(Screen.ManageCategories.route)
+                    },
+                    onSubmitSuggestionClick = {
+                        navController.navigate(Screen.SubmitSuggestion.route)
+                    },
+                    onAdminDashboardClick = {
+                        navController.navigate(Screen.AdminDashboard.route)
                     }
+                )
+            }
+            composable(Screen.SubmitSuggestion.route) {
+                com.example.mybudget.ui.screens.more.SubmitSuggestionScreen(
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(Screen.AdminDashboard.route) {
+                com.example.mybudget.ui.screens.more.AdminDashboardScreen(
+                    onBackClick = { navController.popBackStack() }
                 )
             }
             composable(Screen.ManageCategories.route) {
@@ -151,9 +237,17 @@ fun MyBudgetAppScreen(
                 val viewModel: WalletViewModel = hiltViewModel()
                 AddWalletScreen(navController = navController, viewModel = viewModel)
             }
-            composable(Screen.AddTransaction.route) {
+            composable(
+                route = Screen.AddTransaction.route,
+                arguments = listOf(navArgument("type") { 
+                    type = androidx.navigation.NavType.StringType
+                    nullable = true 
+                })
+            ) { backStackEntry ->
+                val transactionType = backStackEntry.arguments?.getString("type")
                 AddTransactionScreen(
-                    onNavigateBack = { navController.popBackStack() }
+                    onNavigateBack = { navController.popBackStack() },
+                    initialType = transactionType
                 )
             }
             composable(Screen.AddBill.route) {
@@ -188,5 +282,29 @@ fun MyBudgetAppScreen(
                 )
             }
         }
+        
+        if (isUserLoggedIn == true && showFloatingCalculator) {
+            FloatingCalculator()
+        }
+        
+        if (showExitDialog) {
+            AlertDialog(
+                onDismissRequest = { showExitDialog = false },
+                title = { Text("Exit App") },
+                text = { Text("Are you sure you want to exit the application?") },
+                confirmButton = {
+                    TextButton(onClick = { (context as? android.app.Activity)?.finish() }) {
+                        Text("Exit")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showExitDialog = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
+}
+}
 }

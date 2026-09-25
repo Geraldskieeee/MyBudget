@@ -27,23 +27,44 @@ import android.content.Intent
 fun MoreScreen(
     viewModel: MoreViewModel,
     onLogoutClick: () -> Unit,
-    onManageCategoriesClick: () -> Unit = {}
+    onManageCategoriesClick: () -> Unit = {},
+    onSubmitSuggestionClick: () -> Unit = {},
+    onAdminDashboardClick: () -> Unit = {}
 ) {
     val totalWealth by viewModel.totalWealth.collectAsState()
     val transactionCount by viewModel.transactionCount.collectAsState()
     val activeGoals by viewModel.activeGoalsCount.collectAsState()
     val isDarkMode by viewModel.isDarkMode.collectAsState()
+    val isAnimationsEnabled by viewModel.isAnimationsEnabled.collectAsState()
+
+    val showFloatingCalculator by viewModel.showFloatingCalculator.collectAsState()
+    val fontScale by viewModel.fontScale.collectAsState()
     val context = LocalContext.current
     var showCreditsDialog by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var newPassword by remember { mutableStateOf("") }
     var isUpdatingPassword by remember { mutableStateOf(false) }
+    
+    val userPhotoUrl by viewModel.userPhotoUrl.collectAsState()
+    
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        uri?.let {
+            viewModel.updateProfileImage(it, context)
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Profile & Settings") }
+                title = { Text("Profile & Settings", fontWeight = FontWeight.Bold) },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF32D74B),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
+                )
             )
         }
     ) { padding ->
@@ -52,7 +73,7 @@ fun MoreScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .background(MaterialTheme.colorScheme.background),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 120.dp)
         ) {
             // 1. Profile Header
             item {
@@ -62,29 +83,31 @@ fun MoreScreen(
                         .padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    if (viewModel.userPhotoUrl != null) {
-                        AsyncImage(
-                            model = viewModel.userPhotoUrl,
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primaryContainer),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Person,
+                    Box(modifier = Modifier.clickable { launcher.launch("image/*") }) {
+                        if (userPhotoUrl != null) {
+                            AsyncImage(
+                                model = userPhotoUrl,
                                 contentDescription = "Profile Picture",
-                                modifier = Modifier.size(60.dp),
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
                             )
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .size(100.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primaryContainer),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Person,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier.size(60.dp),
+                                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
                         }
                     }
                     Spacer(modifier = Modifier.height(16.dp))
@@ -101,7 +124,7 @@ fun MoreScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    StatCard(modifier = Modifier.weight(1f), title = "Total Wealth", value = "₱${String.format(java.util.Locale.US, "%.0f", totalWealth)}")
+                    StatCard(modifier = Modifier.weight(1f), title = "Total Wealth", value = "₱${String.format(java.util.Locale.US, "%,.0f", totalWealth)}")
                     StatCard(modifier = Modifier.weight(1f), title = "Transactions", value = transactionCount.toString())
                     StatCard(modifier = Modifier.weight(1f), title = "Active Goals", value = activeGoals.toString())
                 }
@@ -134,6 +157,33 @@ fun MoreScreen(
                     onCheckedChange = { viewModel.setDarkMode(it) }
                 )
                 
+                SettingsSwitchItem(
+                    icon = Icons.Filled.Animation,
+                    title = "Animations",
+                    subtitle = "Enable or disable UI animations",
+                    checked = isAnimationsEnabled,
+                    onCheckedChange = { viewModel.setAnimationsEnabled(it) }
+                )
+
+
+                SettingsSwitchItem(
+                    icon = Icons.Filled.Calculate,
+                    title = "Floating Calculator",
+                    subtitle = "Show floating calculator on all screens",
+                    checked = showFloatingCalculator,
+                    onCheckedChange = { viewModel.setShowFloatingCalculator(it) }
+                )
+                
+                SettingsSliderItem(
+                    icon = Icons.Filled.FormatSize,
+                    title = "Text Adjust",
+                    subtitle = "Adjust the app's text size",
+                    value = fontScale,
+                    onValueChange = { viewModel.setFontScale(it) },
+                    valueRange = 0.8f..1.5f,
+                    steps = 6
+                )
+                
                 SettingsItem(
                     icon = Icons.Filled.FileDownload,
                     title = "Export Data",
@@ -151,6 +201,24 @@ fun MoreScreen(
                         }
                     }
                 )
+
+                SettingsItem(
+                    icon = Icons.Filled.Feedback,
+                    title = "Submit Suggestion",
+                    subtitle = "Help us improve the app",
+                    onClick = onSubmitSuggestionClick
+                )
+                
+                if (viewModel.userEmail.trim().equals(com.example.mybudget.util.AdminConfig.ADMIN_EMAIL.trim(), ignoreCase = true)) {
+                    SettingsItem(
+                        icon = Icons.Filled.AdminPanelSettings,
+                        title = "Admin Dashboard",
+                        subtitle = "View suggestions & analytics",
+                        titleColor = MaterialTheme.colorScheme.primary,
+                        iconTint = MaterialTheme.colorScheme.primary,
+                        onClick = onAdminDashboardClick
+                    )
+                }
 
                 SettingsItem(
                     icon = Icons.Filled.Info,
@@ -197,7 +265,7 @@ fun MoreScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Version 1.0.0",
+                        text = "Version 5.5.0",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -381,6 +449,46 @@ fun SettingsSwitchItem(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange
+        )
+    }
+}
+
+@Composable
+fun SettingsSliderItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    title: String,
+    subtitle: String? = null,
+    value: Float,
+    onValueChange: (Float) -> Unit,
+    valueRange: ClosedFloatingPointRange<Float> = 0f..1f,
+    steps: Int = 0
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge)
+                if (subtitle != null) {
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            Text(String.format(java.util.Locale.US, "%.1fx", value), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = valueRange,
+            steps = steps,
+            modifier = Modifier.fillMaxWidth()
         )
     }
 }

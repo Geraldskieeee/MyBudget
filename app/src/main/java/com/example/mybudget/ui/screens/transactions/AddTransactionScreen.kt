@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -19,12 +20,23 @@ import com.example.mybudget.data.local.entity.TransactionType
 @Composable
 fun AddTransactionScreen(
     onNavigateBack: () -> Unit,
+    initialType: String? = null,
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     var amount by remember { mutableStateOf("") }
     var note by remember { mutableStateOf("") }
     
     val selectedType by viewModel.selectedType.collectAsState()
+    
+    LaunchedEffect(initialType) {
+        if (initialType != null) {
+            when (initialType.uppercase()) {
+                "INCOME" -> viewModel.selectedType.value = TransactionType.INCOME
+                "EXPENSE" -> viewModel.selectedType.value = TransactionType.EXPENSE
+                "TRANSFER" -> viewModel.selectedType.value = TransactionType.TRANSFER
+            }
+        }
+    }
     
     // Wallets dropdown state
     val wallets by viewModel.wallets.collectAsState()
@@ -40,6 +52,14 @@ fun AddTransactionScreen(
     var selectedCategoryId by remember { mutableStateOf<Long?>(null) }
     var categoryExpanded by remember { mutableStateOf(false) }
     
+    // Add Category Dialog State
+    var showAddCategoryDialog by remember { mutableStateOf(false) }
+    var newCategoryName by remember { mutableStateOf("") }
+    
+    // Confirmation Dialog State
+    var showConfirmDialog by remember { mutableStateOf(false) }
+    var actionToConfirm by remember { mutableStateOf<() -> Unit>({}) }
+    
     // Auto-select first wallet if available
     LaunchedEffect(wallets) {
         if (selectedWalletId == null && wallets.isNotEmpty()) {
@@ -52,16 +72,23 @@ fun AddTransactionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Add Transaction") },
+                title = { 
+                    val titleStr = when (selectedType) {
+                        TransactionType.INCOME -> "Add Income"
+                        TransactionType.EXPENSE -> "Add Expense"
+                        TransactionType.TRANSFER -> "Transfer Money"
+                    }
+                    Text(titleStr) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Filled.ArrowBack, "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = Color(0xFF32D74B),
+                    titleContentColor = Color.Black,
+                    navigationIconContentColor = Color.Black
                 )
             )
         }
@@ -73,26 +100,9 @@ fun AddTransactionScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Transaction Type Selector
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)) {
-                val options = TransactionType.values()
-                options.forEachIndexed { index, type ->
-                    SegmentedButton(
-                        selected = selectedType == type,
-                        onClick = { 
-                            viewModel.selectedType.value = type
-                            selectedCategoryId = null // Reset category when type changes
-                        },
-                        shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size)
-                    ) {
-                        Text(type.name.lowercase().replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.labelLarge)
-                    }
-                }
-            }
-            
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = androidx.compose.ui.graphics.Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -124,7 +134,7 @@ fun AddTransactionScreen(
                 ) {
                     wallets.forEach { wallet ->
                         DropdownMenuItem(
-                            text = { Text("${wallet.name} (₱${String.format(java.util.Locale.US, "%.2f", wallet.currentBalance)})") },
+                            text = { Text("${wallet.name} (₱${String.format(java.util.Locale.US, "%,.2f", wallet.currentBalance)})") },
                             onClick = {
                                 selectedWalletId = wallet.id
                                 walletExpanded = false
@@ -157,7 +167,7 @@ fun AddTransactionScreen(
                     ) {
                         wallets.filter { it.id != selectedWalletId }.forEach { wallet ->
                             DropdownMenuItem(
-                                text = { Text("${wallet.name} (₱${String.format(java.util.Locale.US, "%.2f", wallet.currentBalance)})") },
+                                text = { Text("${wallet.name} (₱${String.format(java.util.Locale.US, "%,.2f", wallet.currentBalance)})") },
                                 onClick = {
                                     selectedToWalletId = wallet.id
                                     toWalletExpanded = false
@@ -173,11 +183,12 @@ fun AddTransactionScreen(
                     onExpandedChange = { categoryExpanded = !categoryExpanded },
                     modifier = Modifier.fillMaxWidth()
                 ) {
+                    val categoryLabel = "Category"
                     OutlinedTextField(
-                        value = categories.find { it.id == selectedCategoryId }?.name ?: "Select Category",
+                        value = categories.find { it.id == selectedCategoryId }?.name ?: "Select $categoryLabel",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Category") },
+                        label = { Text(categoryLabel) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp)
@@ -196,6 +207,14 @@ fun AddTransactionScreen(
                                 }
                             )
                         }
+                        Divider()
+                        DropdownMenuItem(
+                            text = { Text("+ Add New", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+                            onClick = {
+                                categoryExpanded = false
+                                showAddCategoryDialog = true
+                            }
+                        )
                     }
                 }
             }
@@ -243,15 +262,18 @@ fun AddTransactionScreen(
                             return@Button
                         }
 
-                        viewModel.addTransaction(
-                            walletId = selectedWalletId!!,
-                            amount = amountValue,
-                            type = selectedType,
-                            note = note,
-                            toWalletId = if (selectedType == TransactionType.TRANSFER) selectedToWalletId else null,
-                            categoryId = if (selectedType != TransactionType.TRANSFER) selectedCategoryId else null
-                        )
-                        onNavigateBack()
+                        actionToConfirm = {
+                            viewModel.addTransaction(
+                                walletId = selectedWalletId!!,
+                                amount = amountValue,
+                                type = selectedType,
+                                note = note,
+                                toWalletId = if (selectedType == TransactionType.TRANSFER) selectedToWalletId else null,
+                                categoryId = if (selectedType != TransactionType.TRANSFER) selectedCategoryId else null
+                            )
+                            onNavigateBack()
+                        }
+                        showConfirmDialog = true
                     } else {
                         Toast.makeText(context, "Please enter a valid amount", Toast.LENGTH_SHORT).show()
                     }
@@ -262,8 +284,69 @@ fun AddTransactionScreen(
                     .padding(bottom = 8.dp),
                 shape = RoundedCornerShape(50)
             ) {
-                Text("Save Transaction", style = MaterialTheme.typography.titleMedium)
+                val btnStr = when (selectedType) {
+                    TransactionType.INCOME -> "Save Income"
+                    TransactionType.EXPENSE -> "Save Expense"
+                    TransactionType.TRANSFER -> "Transfer"
+                }
+                Text(btnStr, style = MaterialTheme.typography.titleMedium)
             }
         }
+    }
+    
+    if (showAddCategoryDialog) {
+        AlertDialog(
+            onDismissRequest = { showAddCategoryDialog = false },
+            title = { Text("Add New Category") },
+            text = {
+                OutlinedTextField(
+                    value = newCategoryName,
+                    onValueChange = { newCategoryName = it },
+                    label = { Text("Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (newCategoryName.isNotBlank()) {
+                            viewModel.addCategory(newCategoryName, selectedType)
+                            newCategoryName = ""
+                            showAddCategoryDialog = false
+                            Toast.makeText(context, "Added", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Text("Add")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddCategoryDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (showConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showConfirmDialog = false },
+            title = { Text("Confirm Action") },
+            text = { Text("Are you sure you want to save this transaction?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    actionToConfirm()
+                    showConfirmDialog = false
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
     }
 }
