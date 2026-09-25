@@ -235,7 +235,7 @@ fun MoreScreen(
                 )
                 
                 SettingsItem(
-                    icon = Icons.Filled.Logout,
+                    icon = Icons.AutoMirrored.Filled.Logout,
                     title = "Logout",
                     subtitle = "Sign out of your account",
                     titleColor = MaterialTheme.colorScheme.error,

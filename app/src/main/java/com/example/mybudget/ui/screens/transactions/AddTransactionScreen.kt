@@ -2,14 +2,16 @@ package com.example.mybudget.ui.screens.transactions
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material.icons.outlined.EditNote
-import androidx.compose.material.icons.outlined.Label
+import androidx.compose.material.icons.automirrored.outlined.Label
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -97,7 +99,7 @@ fun AddTransactionScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.Filled.ArrowBack, "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
@@ -132,7 +134,7 @@ fun AddTransactionScreen(
                         Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet Icon", tint = Color(0xFF1B6B43))
                     },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = walletExpanded) },
-                    modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                     colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                     shape = RoundedCornerShape(16.dp)
                 )
@@ -169,7 +171,7 @@ fun AddTransactionScreen(
                             Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet Icon", tint = Color(0xFF1B6B43))
                         },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = toWalletExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -203,10 +205,10 @@ fun AddTransactionScreen(
                         readOnly = true,
                         label = { Text(categoryLabel) },
                         leadingIcon = {
-                            Icon(Icons.Outlined.Label, contentDescription = "Category Icon", tint = Color(0xFF1B6B43))
+                            Icon(Icons.AutoMirrored.Outlined.Label, contentDescription = "Category Icon", tint = Color(0xFF1B6B43))
                         },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
-                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        modifier = Modifier.menuAnchor(androidx.compose.material3.ExposedDropdownMenuAnchorType.PrimaryNotEditable).fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                         shape = RoundedCornerShape(16.dp)
                     )
@@ -224,7 +226,7 @@ fun AddTransactionScreen(
                                 }
                             )
                         }
-                        Divider()
+                        HorizontalDivider()
                         DropdownMenuItem(
                             text = { Text("+ Add New", color = MaterialTheme.colorScheme.primary, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
                             onClick = {
@@ -315,6 +317,7 @@ fun AddTransactionScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(btnStr, style = MaterialTheme.typography.titleMedium)
                 }
+            } // End of Button
         } // End of Column
     }
     
