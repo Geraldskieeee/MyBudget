@@ -6,11 +6,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.EditNote
+import androidx.compose.material.icons.outlined.Label
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.example.mybudget.R
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -70,47 +79,53 @@ fun AddTransactionScreen(
     val context = LocalContext.current
 
     Scaffold(
+        containerColor = Color(0xFFF5F2EB), // Cream background
         topBar = {
-            TopAppBar(
-                title = { 
-                    val titleStr = when (selectedType) {
-                        TransactionType.INCOME -> "Add Income"
-                        TransactionType.EXPENSE -> "Add Expense"
-                        TransactionType.TRANSFER -> "Transfer Money"
-                    }
-                    Text(titleStr) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Filled.ArrowBack, "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF32D74B),
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black
+            Surface(
+                color = Color(0xFF1B6B43),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                shadowElevation = 8.dp
+            ) {
+                TopAppBar(
+                    title = { 
+                        val titleStr = when (selectedType) {
+                            TransactionType.INCOME -> "Add Income"
+                            TransactionType.EXPENSE -> "Add Expense"
+                            TransactionType.TRANSFER -> "Transfer Money"
+                        }
+                        Text(titleStr) 
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onNavigateBack) {
+                            Icon(Icons.Filled.ArrowBack, "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
                 )
-            )
+            }
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(id = R.drawable.bg_succulent),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .fillMaxHeight(0.4f)
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
             
             // Source Wallet Selector
             ExposedDropdownMenuBox(
@@ -123,8 +138,12 @@ fun AddTransactionScreen(
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(if (selectedType == TransactionType.TRANSFER) "From Wallet" else "Wallet") },
+                    leadingIcon = {
+                        Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet Icon", tint = Color(0xFF1B6B43))
+                    },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = walletExpanded) },
                     modifier = Modifier.menuAnchor().fillMaxWidth(),
+                    colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                     shape = RoundedCornerShape(16.dp)
                 )
                 
@@ -156,8 +175,12 @@ fun AddTransactionScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text("To Wallet") },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet Icon", tint = Color(0xFF1B6B43))
+                        },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = toWalletExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                         shape = RoundedCornerShape(16.dp)
                     )
                     
@@ -189,8 +212,12 @@ fun AddTransactionScreen(
                         onValueChange = {},
                         readOnly = true,
                         label = { Text(categoryLabel) },
+                        leadingIcon = {
+                            Icon(Icons.Outlined.Label, contentDescription = "Category Icon", tint = Color(0xFF1B6B43))
+                        },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                         modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                         shape = RoundedCornerShape(16.dp)
                     )
                     
@@ -225,8 +252,9 @@ fun AddTransactionScreen(
                 label = { Text("Amount") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 modifier = Modifier.fillMaxWidth(),
-                prefix = { Text("₱") },
+                leadingIcon = { Text("$", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, modifier = Modifier.padding(start = 16.dp)) },
                 singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                 shape = RoundedCornerShape(16.dp)
             )
 
@@ -234,12 +262,14 @@ fun AddTransactionScreen(
                 value = note,
                 onValueChange = { note = it },
                 label = { Text("Note (Optional)") },
+                leadingIcon = {
+                    Icon(Icons.Outlined.EditNote, contentDescription = "Note Icon", tint = Color(0xFF1B6B43))
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
                 shape = RoundedCornerShape(16.dp)
             )
-            } // End of Card column
-            } // End of Card
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -282,6 +312,7 @@ fun AddTransactionScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .padding(bottom = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F5132)),
                 shape = RoundedCornerShape(50)
             ) {
                 val btnStr = when (selectedType) {
@@ -289,9 +320,14 @@ fun AddTransactionScreen(
                     TransactionType.EXPENSE -> "Save Expense"
                     TransactionType.TRANSFER -> "Transfer"
                 }
-                Text(btnStr, style = MaterialTheme.typography.titleMedium)
+                Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Check, contentDescription = "Save", modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(btnStr, style = MaterialTheme.typography.titleMedium)
+                }
             }
-        }
+        } // End of Column
+        } // End of Box
     }
     
     if (showAddCategoryDialog) {
