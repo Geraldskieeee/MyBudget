@@ -11,20 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,20 +36,27 @@ fun AddWalletScreen(
     var showConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        containerColor = Color(0xFFF5F2EB), // Cream background
         topBar = {
-            TopAppBar(
-                title = { Text("Add Wallet") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF32D74B),
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black
+            Surface(
+                color = Color(0xFF1B6B43),
+                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+                shadowElevation = 8.dp
+            ) {
+                TopAppBar(
+                    title = { Text("Add Wallet") },
+                    navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
                 )
-            )
+            }
         }
     ) { paddingValues ->
         Column(
@@ -68,38 +64,31 @@ fun AddWalletScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Card(
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Wallet Name (e.g. Cash, GCash)") },
+                leadingIcon = {
+                    Icon(Icons.Outlined.AccountBalanceWallet, contentDescription = "Wallet Icon", tint = Color(0xFF1B6B43))
+                },
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        label = { Text("Wallet Name (e.g. Cash, GCash)") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    OutlinedTextField(
-                        value = startingBalance,
-                        onValueChange = { startingBalance = it },
-                        label = { Text("Starting Balance") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                }
-            }
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
+                shape = RoundedCornerShape(16.dp)
+            )
+            OutlinedTextField(
+                value = startingBalance,
+                onValueChange = { startingBalance = it },
+                label = { Text("Starting Balance") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                leadingIcon = { Text("$", style = MaterialTheme.typography.titleLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, modifier = Modifier.padding(start = 16.dp)) },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(unfocusedContainerColor = Color.Transparent, focusedContainerColor = Color.Transparent),
+                shape = RoundedCornerShape(16.dp)
+            )
 
             Spacer(modifier = Modifier.weight(1f))
 
@@ -114,9 +103,14 @@ fun AddWalletScreen(
                     .fillMaxWidth()
                     .height(56.dp)
                     .padding(bottom = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F5132)),
                 shape = RoundedCornerShape(50)
             ) {
-                Text("Save Wallet", style = MaterialTheme.typography.titleMedium)
+                androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                    Icon(Icons.Filled.Check, contentDescription = "Save", modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Save Wallet", style = MaterialTheme.typography.titleMedium)
+                }
             }
         }
     }

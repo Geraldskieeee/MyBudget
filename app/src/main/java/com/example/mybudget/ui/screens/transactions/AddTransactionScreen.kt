@@ -109,21 +109,11 @@ fun AddTransactionScreen(
             }
         }
     ) { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            Image(
-                painter = painterResource(id = R.drawable.bg_succulent),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.4f)
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp),
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             
@@ -325,9 +315,7 @@ fun AddTransactionScreen(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(btnStr, style = MaterialTheme.typography.titleMedium)
                 }
-            }
         } // End of Column
-        } // End of Box
     }
     
     if (showAddCategoryDialog) {
