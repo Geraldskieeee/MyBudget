@@ -348,39 +348,62 @@ fun HomeScreen(
 
 @Composable
 fun BalanceCard(balance: Double) {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            .padding(16.dp)
+            .background(Color.Transparent)
     ) {
+        // Glowing Aura
         Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .padding(8.dp) // Slightly smaller than the card
                 .background(
-                    brush = Brush.linearGradient(
+                    brush = Brush.radialGradient(
                         colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.tertiary
-                        )
+                            Color(0xFF32D74B).copy(alpha = 0.4f),
+                            Color.Transparent
+                        ),
+                        radius = 400f
                     )
                 )
-                .padding(24.dp)
+        )
+        
+        // Glassmorphic Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Column {
-                Text(
-                    text = "Total Balance",
-                    color = Color.White.copy(alpha = 0.8f),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "₱${String.format(java.util.Locale.US, "%,.2f", balance)}",
-                    color = Color.White,
-                    style = MaterialTheme.typography.displayMedium,
-                    fontWeight = FontWeight.Bold
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "Total Balance",
+                        color = Color.White.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "₱${String.format(java.util.Locale.US, "%,.2f", balance)}",
+                        color = Color.White,
+                        style = MaterialTheme.typography.displayMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "+₱1,150.30 (8.4%)", // Hardcoded mock for UI visual as in the design
+                        color = Color(0xFF32D74B),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
     }

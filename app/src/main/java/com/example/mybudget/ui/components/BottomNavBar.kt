@@ -77,11 +77,12 @@ fun BottomNavBar(
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
-                    .shadow(16.dp, CircleShape),
+                    .height(72.dp)
+                    .shadow(12.dp, CircleShape),
                 shape = CircleShape,
-                color = MaterialTheme.colorScheme.surfaceVariant,
-                tonalElevation = 4.dp
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), // Translucent
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)),
+                tonalElevation = 0.dp
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),
