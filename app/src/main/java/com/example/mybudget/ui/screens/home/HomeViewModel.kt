@@ -65,14 +65,18 @@ class HomeViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val recentTransactions = combine(
+    val recentTransactions = kotlinx.coroutines.flow.combine(
         transactionRepository.getAllTransactions(),
-        settingsRepository.lastClearedTimestamp
-    ) { transactions, timestamp ->
+        settingsRepository.lastClearedTimestamp,
+        walletRepository.getAllWallets()
+    ) { transactions, timestamp, wallets ->
+        val activeWalletIds = wallets.map { it.id }.toSet()
+        val validTransactions = transactions.filter { it.walletId in activeWalletIds }
+        
         if (timestamp == 0L) {
-            transactions.take(5)
+            validTransactions.take(5)
         } else {
-            transactions.filter { it.dateTimestamp > timestamp }
+            validTransactions.filter { it.dateTimestamp > timestamp }
         }
     }.stateIn(
         scope = viewModelScope,
@@ -94,21 +98,26 @@ class HomeViewModel @Inject constructor(
             initialValue = false
         )
 
-    val todayExpenses = transactionRepository.getAllTransactions()
-        .map { transactions ->
-            val calendar = Calendar.getInstance().apply {
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 0)
-                set(Calendar.SECOND, 0)
-                set(Calendar.MILLISECOND, 0)
-            }
-            val startOfDay = calendar.timeInMillis
-            
-            transactions
-                .filter { it.type == TransactionType.EXPENSE && it.dateTimestamp >= startOfDay }
-                .sumOf { it.amount }
+    val todayExpenses = kotlinx.coroutines.flow.combine(
+        transactionRepository.getAllTransactions(),
+        walletRepository.getAllWallets()
+    ) { transactions, wallets ->
+        val activeWalletIds = wallets.map { it.id }.toSet()
+        val validTransactions = transactions.filter { it.walletId in activeWalletIds }
+        
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
         }
-        .stateIn(
+        val startOfDay = calendar.timeInMillis
+        
+        validTransactions
+            .filter { it.type == TransactionType.EXPENSE && it.dateTimestamp >= startOfDay }
+            .sumOf { it.amount }
+    }
+    .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0.0

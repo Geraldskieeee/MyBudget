@@ -37,12 +37,17 @@ class TransactionViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val transactions = transactionRepository.getAllTransactions()
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
+    val transactions = kotlinx.coroutines.flow.combine(
+        transactionRepository.getAllTransactions(),
+        walletRepository.getAllWallets()
+    ) { transactions, wallets ->
+        val activeWalletIds = wallets.map { it.id }.toSet()
+        transactions.filter { it.walletId in activeWalletIds }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     val selectedType = MutableStateFlow(TransactionType.EXPENSE)
     

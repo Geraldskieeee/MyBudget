@@ -6,6 +6,7 @@ import com.example.mybudget.data.local.entity.Category
 import com.example.mybudget.data.local.entity.TransactionType
 import com.example.mybudget.data.repository.CategoryRepository
 import com.example.mybudget.data.repository.TransactionRepository
+import com.example.mybudget.data.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import java.util.*
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AnalyticsViewModel @Inject constructor(
     transactionRepository: TransactionRepository,
-    categoryRepository: CategoryRepository
+    categoryRepository: CategoryRepository,
+    private val walletRepository: WalletRepository
 ) : ViewModel() {
 
     private val _selectedMonth = MutableStateFlow(Calendar.getInstance())
@@ -23,8 +25,13 @@ class AnalyticsViewModel @Inject constructor(
     private val _selectedType = MutableStateFlow(TransactionType.EXPENSE)
     val selectedType: StateFlow<TransactionType> = _selectedType.asStateFlow()
 
-    val transactions = transactionRepository.getAllTransactions()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val transactions = combine(
+        transactionRepository.getAllTransactions(),
+        walletRepository.getAllWallets()
+    ) { transactions, wallets ->
+        val activeWalletIds = wallets.map { it.id }.toSet()
+        transactions.filter { it.walletId in activeWalletIds }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val categories = categoryRepository.getAllCategories()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
