@@ -325,7 +325,7 @@ fun HomeScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "No recent transactions",
+                                text = if (activeFilterName != "All Time") "No transactions for $activeFilterName" else "No recent transactions",
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
