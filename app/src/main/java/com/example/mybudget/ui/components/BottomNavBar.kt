@@ -3,7 +3,6 @@ package com.example.mybudget.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -75,13 +74,14 @@ fun BottomNavBar(
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             contentAlignment = Alignment.BottomCenter
         ) {
-            Box(
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(72.dp)
-                    .shadow(12.dp, CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f), CircleShape)
-                    .border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.1f)), CircleShape)
+                    .height(64.dp)
+                    .shadow(16.dp, CircleShape),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                tonalElevation = 4.dp
             ) {
                 Row(
                     modifier = Modifier.fillMaxSize(),

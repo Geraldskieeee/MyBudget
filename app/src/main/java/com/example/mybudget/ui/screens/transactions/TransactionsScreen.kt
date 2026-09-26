@@ -1,12 +1,5 @@
 package com.example.mybudget.ui.screens.transactions
 
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -120,12 +113,10 @@ fun TransactionItem(
         TransactionType.TRANSFER -> ""
     }
 
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
-            .border(androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.05f)), RoundedCornerShape(16.dp))
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier
@@ -134,61 +125,52 @@ fun TransactionItem(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                // Colored Icon Box
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(color),
-                    contentAlignment = Alignment.Center
-                ) {
-                    val iconVector = when (transaction.type) {
-                        TransactionType.INCOME -> Icons.Filled.ArrowUpward
-                        TransactionType.EXPENSE -> Icons.Filled.ArrowDownward
-                        TransactionType.TRANSFER -> Icons.Filled.SwapHoriz
-                    }
-                    Icon(imageVector = iconVector, contentDescription = null, tint = Color.White, modifier = Modifier.size(24.dp))
-                }
+            Column {
+                val categoryName = categories.find { it.id == transaction.categoryId }?.name ?: transaction.type.name.lowercase().replaceFirstChar { it.uppercase() }
+                val walletName = wallets.find { it.id == transaction.walletId }?.name
                 
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                Column {
-                    val categoryName = categories.find { it.id == transaction.categoryId }?.name ?: transaction.type.name.lowercase().replaceFirstChar { it.uppercase() }
-                    val walletName = wallets.find { it.id == transaction.walletId }?.name
-                    
-                    Text(
-                        text = categoryName,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                Text(
+                    text = categoryName,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                if (transaction.note.isNotBlank()) {
                     Spacer(modifier = Modifier.height(2.dp))
-                    
-                    val subtitle = buildString {
-                        if (walletName != null) append(walletName)
-                        if (walletName != null && transaction.note.isNotBlank()) append(" • ")
-                        if (transaction.note.isNotBlank()) append(transaction.note)
-                        if (isNotEmpty()) append(" • ")
-                        append(dateString)
-                    }
-                    
                     Text(
-                        text = subtitle,
+                        text = transaction.note,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color.White.copy(alpha = 0.6f),
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = dateString,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    if (walletName != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = walletName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
-            
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = "$sign₱${String.format(java.util.Locale.US, "%,.2f", transaction.amount)}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = color
                 )
                 if (showDelete) {
                     Spacer(modifier = Modifier.width(8.dp))
