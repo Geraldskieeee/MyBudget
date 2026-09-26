@@ -68,8 +68,9 @@ fun HomeScreen(
     var isWalletSelectionMode by remember { mutableStateOf(false) }
     var selectedWallets by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteWalletDialog by remember { mutableStateOf(false) }
-    var showClearDropdown by remember { mutableStateOf(false) }
+    var showFilterDropdown by remember { mutableStateOf(false) }
     val categories by viewModel.categories.collectAsState()
+    val isFiltered by viewModel.isFiltered.collectAsState()
 
     Scaffold(
         topBar = {
@@ -232,14 +233,14 @@ fun HomeScreen(
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
-                    if (recentTransactions.isNotEmpty()) {
+                    if (recentTransactions.isNotEmpty() || isFiltered) {
                         Box {
-                            TextButton(onClick = { showClearDropdown = true }) {
-                                Text("Clear", color = MaterialTheme.colorScheme.primary)
+                            TextButton(onClick = { showFilterDropdown = true }) {
+                                Text("Filter", color = MaterialTheme.colorScheme.primary)
                             }
                             DropdownMenu(
-                                expanded = showClearDropdown,
-                                onDismissRequest = { showClearDropdown = false }
+                                expanded = showFilterDropdown,
+                                onDismissRequest = { showFilterDropdown = false }
                             ) {
                                 val now = System.currentTimeMillis()
                                 val dayMs = 24L * 60 * 60 * 1000
@@ -248,38 +249,38 @@ fun HomeScreen(
                                 val yearMs = 365 * dayMs
                                 
                                 DropdownMenuItem(
-                                    text = { Text("Past Day") },
+                                    text = { Text("Show Past Day") },
                                     onClick = { 
                                         viewModel.clearRecentTransactions(now - dayMs)
-                                        showClearDropdown = false
+                                        showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Past Week") },
+                                    text = { Text("Show Past Week") },
                                     onClick = { 
                                         viewModel.clearRecentTransactions(now - weekMs)
-                                        showClearDropdown = false
+                                        showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Past Month") },
+                                    text = { Text("Show Past Month") },
                                     onClick = { 
                                         viewModel.clearRecentTransactions(now - monthMs)
-                                        showClearDropdown = false
+                                        showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Past Year") },
+                                    text = { Text("Show Past Year") },
                                     onClick = { 
                                         viewModel.clearRecentTransactions(now - yearMs)
-                                        showClearDropdown = false
+                                        showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("All Time") },
+                                    text = { Text("Show All Time") },
                                     onClick = { 
-                                        viewModel.clearRecentTransactions(now)
-                                        showClearDropdown = false
+                                        viewModel.clearRecentTransactions(0L)
+                                        showFilterDropdown = false
                                     }
                                 )
                             }

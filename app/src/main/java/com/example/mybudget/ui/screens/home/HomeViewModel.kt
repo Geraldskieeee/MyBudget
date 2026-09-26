@@ -26,6 +26,8 @@ import com.example.mybudget.data.local.entity.Wallet
 import java.util.Calendar
 
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 import kotlinx.coroutines.flow.first
 
@@ -79,6 +81,14 @@ class HomeViewModel @Inject constructor(
             settingsRepository.setLastClearedTimestamp(thresholdTimestamp)
         }
     }
+    
+    val isFiltered = settingsRepository.lastClearedTimestamp
+        .map { it > 0L }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = false
+        )
 
     val todayExpenses = transactionRepository.getAllTransactions()
         .map { transactions ->
