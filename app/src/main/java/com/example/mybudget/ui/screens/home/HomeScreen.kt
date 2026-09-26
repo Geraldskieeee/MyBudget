@@ -357,7 +357,7 @@ fun BalanceCard(balance: Double) {
         // Glowing Aura
         Box(
             modifier = Modifier
-                .fillMaxSize()
+                .matchParentSize()
                 .padding(8.dp) // Slightly smaller than the card
                 .background(
                     brush = Brush.radialGradient(
