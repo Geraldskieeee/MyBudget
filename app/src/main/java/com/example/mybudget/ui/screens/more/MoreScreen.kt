@@ -130,26 +130,29 @@ fun MoreScreen(
                     StatCard(modifier = Modifier.weight(1f), title = "Active Goals", value = activeGoals.toString())
                 }
             }
-
-            // 3. Settings Menu
-            item {
-                Text(
-                    text = "Preferences",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 24.dp, top = 32.dp, bottom = 8.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
             
+            // 3. Settings Menu
+            item { SettingsHeader("Account") }
             item {
                 SettingsItem(
-                    icon = Icons.Filled.Category,
-                    title = "Manage Categories",
-                    subtitle = "Add or edit expense categories",
-                    onClick = onManageCategoriesClick
+                    icon = Icons.Filled.LockReset,
+                    title = "Change Password",
+                    subtitle = "Update your account password",
+                    onClick = { showChangePasswordDialog = true }
                 )
                 
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    title = "Logout",
+                    subtitle = "Sign out of your account",
+                    titleColor = MaterialTheme.colorScheme.error,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    onClick = { showLogoutDialog = true }
+                )
+            }
+
+            item { SettingsHeader("Appearance") }
+            item {
                 SettingsSwitchItem(
                     icon = Icons.Filled.DarkMode,
                     title = "Dark Mode",
@@ -165,15 +168,6 @@ fun MoreScreen(
                     checked = isAnimationsEnabled,
                     onCheckedChange = { viewModel.setAnimationsEnabled(it) }
                 )
-
-
-                SettingsSwitchItem(
-                    icon = Icons.Filled.Calculate,
-                    title = "Floating Calculator",
-                    subtitle = "Show floating calculator on all screens",
-                    checked = showFloatingCalculator,
-                    onCheckedChange = { viewModel.setShowFloatingCalculator(it) }
-                )
                 
                 SettingsSliderItem(
                     icon = Icons.Filled.FormatSize,
@@ -183,6 +177,24 @@ fun MoreScreen(
                     onValueChange = { viewModel.setFontScale(it) },
                     valueRange = 0.8f..1.5f,
                     steps = 6
+                )
+            }
+
+            item { SettingsHeader("General") }
+            item {
+                SettingsItem(
+                    icon = Icons.Filled.Category,
+                    title = "Manage Categories",
+                    subtitle = "Add or edit expense categories",
+                    onClick = onManageCategoriesClick
+                )
+
+                SettingsSwitchItem(
+                    icon = Icons.Filled.Calculate,
+                    title = "Floating Calculator",
+                    subtitle = "Show floating calculator on all screens",
+                    checked = showFloatingCalculator,
+                    onCheckedChange = { viewModel.setShowFloatingCalculator(it) }
                 )
                 
                 SettingsItem(
@@ -202,7 +214,10 @@ fun MoreScreen(
                         }
                     }
                 )
+            }
 
+            item { SettingsHeader("About & Support") }
+            item {
                 SettingsItem(
                     icon = Icons.Filled.Feedback,
                     title = "Submit Suggestion",
@@ -227,25 +242,9 @@ fun MoreScreen(
                     subtitle = "App information and developer credits",
                     onClick = { showCreditsDialog = true }
                 )
-                
-                SettingsItem(
-                    icon = Icons.Filled.LockReset,
-                    title = "Change Password",
-                    subtitle = "Update your account password",
-                    onClick = { showChangePasswordDialog = true }
-                )
-                
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Filled.Logout,
-                    title = "Logout",
-                    subtitle = "Sign out of your account",
-                    titleColor = MaterialTheme.colorScheme.error,
-                    iconTint = MaterialTheme.colorScheme.error,
-                    onClick = {
-                        showLogoutDialog = true
-                    }
-                )
             }
+
+
         }
     }
     
@@ -377,6 +376,17 @@ fun MoreScreen(
             }
         )
     }
+}
+
+@Composable
+fun SettingsHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(start = 24.dp, top = 24.dp, bottom = 8.dp),
+        color = MaterialTheme.colorScheme.primary
+    )
 }
 
 @Composable
