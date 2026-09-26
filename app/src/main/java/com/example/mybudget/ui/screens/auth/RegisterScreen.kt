@@ -50,18 +50,18 @@ fun RegisterScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Create Account",
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                text = "My Budget",
+                fontSize = 42.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                color = androidx.compose.ui.graphics.Color(0xFF105436)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Join MyBudget to manage your finances",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "Join My Budget to manage your finances.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = androidx.compose.ui.graphics.Color.Gray,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             
@@ -70,9 +70,16 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username") },
+                label = { Text("Username", color = androidx.compose.ui.graphics.Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
+                    focusedBorderColor = androidx.compose.ui.graphics.Color(0xFF105436),
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -80,9 +87,16 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Email", color = androidx.compose.ui.graphics.Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
+                    focusedBorderColor = androidx.compose.ui.graphics.Color(0xFF105436),
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -90,16 +104,23 @@ fun RegisterScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text("Password", color = androidx.compose.ui.graphics.Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                        Icon(imageVector = image, contentDescription = "Toggle password visibility", tint = androidx.compose.ui.graphics.Color.DarkGray)
                     }
-                }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                    unfocusedBorderColor = androidx.compose.ui.graphics.Color.Gray,
+                    focusedBorderColor = androidx.compose.ui.graphics.Color(0xFF105436),
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
 
             if (signInState is SignInState.Error) {
@@ -117,7 +138,7 @@ fun RegisterScreen(
                 onClick = { showForgotDialog = true },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("Forgot Password?")
+                Text("Forgot Password?", color = androidx.compose.ui.graphics.Color(0xFF105436), fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -160,13 +181,15 @@ fun RegisterScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = MaterialTheme.shapes.medium
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = androidx.compose.ui.graphics.Color(0xFF105436)),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                 ) {
                     Text(
                         text = "Sign Up",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Normal,
+                        color = androidx.compose.ui.graphics.Color.White
                     )
                 }
 
@@ -176,11 +199,11 @@ fun RegisterScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Already have an account? ")
+                    Text("Already have an account? ", color = androidx.compose.ui.graphics.Color.Black)
                     Text(
                         text = "Login",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
+                        color = androidx.compose.ui.graphics.Color(0xFF105436),
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.clickable { onNavigateToLogin() }
                     )
                 }

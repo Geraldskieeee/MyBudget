@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mybudget.ui.navigation.Screen
@@ -49,18 +50,18 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "MyBudget",
-                fontSize = 40.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                text = "My Budget",
+                fontSize = 42.sp,
+                fontFamily = androidx.compose.ui.text.font.FontFamily.Serif,
+                color = Color(0xFF105436) // Dark green from mockup
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Welcome back! Sign in to continue.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "Welcome Back! Sign in to continue.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Gray,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
             
@@ -69,9 +70,16 @@ fun LoginScreen(
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Email", color = Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color(0xFF105436),
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -79,16 +87,23 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text("Password", color = Color.DarkGray) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = "Toggle password visibility")
+                        Icon(imageVector = image, contentDescription = "Toggle password visibility", tint = Color.DarkGray)
                     }
-                }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedBorderColor = Color.Gray,
+                    focusedBorderColor = Color(0xFF105436),
+                ),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
             )
 
             if (signInState is SignInState.Error) {
@@ -106,7 +121,7 @@ fun LoginScreen(
                 onClick = { showForgotDialog = true },
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("Forgot Password?")
+                Text("Forgot Password?", color = Color(0xFF105436), fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -120,27 +135,29 @@ fun LoginScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(50.dp),
-                    shape = MaterialTheme.shapes.medium
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF105436)),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
                 ) {
                     Text(
                         text = "Login",
                         fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.Normal,
+                        color = Color.White
                     )
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text("Don't have an account? ")
+                    Text("Don't have an account? ", color = Color.Black)
                     Text(
-                        text = "Sign Up",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold,
+                        text = "Sign up",
+                        color = Color(0xFF105436),
+                        fontWeight = FontWeight.Medium,
                         modifier = Modifier.clickable { onNavigateToRegister() }
                     )
                 }

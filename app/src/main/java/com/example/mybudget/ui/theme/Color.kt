@@ -7,7 +7,7 @@ val DarkGreen = Color(0xFF032221)
 val BangladeshGreen = Color(0xFF03624C)
 val MountainMeadow = Color(0xFF2CC295)
 val CaribbeanGreen = Color(0xFF00DF81)
-val AntiFlashWhite = Color(0xFFF1F7F6)
+val AntiFlashWhite = Color(0xFFF5F7F5)
 
 val Pine = Color(0xFF06302B)
 val Basil = Color(0xFF0B453A)
