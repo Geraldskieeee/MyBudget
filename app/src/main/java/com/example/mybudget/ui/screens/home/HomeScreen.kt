@@ -243,56 +243,31 @@ fun HomeScreen(
                                 expanded = showFilterDropdown,
                                 onDismissRequest = { showFilterDropdown = false }
                             ) {
-                                val calendar = java.util.Calendar.getInstance()
-                                
                                 DropdownMenuItem(
                                     text = { Text("Show Past Day") },
                                     onClick = { 
-                                        val cal = calendar.clone() as java.util.Calendar
-                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                        cal.set(java.util.Calendar.MINUTE, 0)
-                                        cal.set(java.util.Calendar.SECOND, 0)
-                                        cal.set(java.util.Calendar.MILLISECOND, 0)
-                                        viewModel.clearRecentTransactions(cal.timeInMillis)
+                                        viewModel.clearRecentTransactions(1L)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Show Past Week") },
                                     onClick = { 
-                                        val cal = calendar.clone() as java.util.Calendar
-                                        cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
-                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                        cal.set(java.util.Calendar.MINUTE, 0)
-                                        cal.set(java.util.Calendar.SECOND, 0)
-                                        cal.set(java.util.Calendar.MILLISECOND, 0)
-                                        viewModel.clearRecentTransactions(cal.timeInMillis)
+                                        viewModel.clearRecentTransactions(2L)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Show Past Month") },
                                     onClick = { 
-                                        val cal = calendar.clone() as java.util.Calendar
-                                        cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
-                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                        cal.set(java.util.Calendar.MINUTE, 0)
-                                        cal.set(java.util.Calendar.SECOND, 0)
-                                        cal.set(java.util.Calendar.MILLISECOND, 0)
-                                        viewModel.clearRecentTransactions(cal.timeInMillis)
+                                        viewModel.clearRecentTransactions(3L)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
                                     text = { Text("Show Past Year") },
                                     onClick = { 
-                                        val cal = calendar.clone() as java.util.Calendar
-                                        cal.set(java.util.Calendar.DAY_OF_YEAR, 1)
-                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
-                                        cal.set(java.util.Calendar.MINUTE, 0)
-                                        cal.set(java.util.Calendar.SECOND, 0)
-                                        cal.set(java.util.Calendar.MILLISECOND, 0)
-                                        viewModel.clearRecentTransactions(cal.timeInMillis)
+                                        viewModel.clearRecentTransactions(4L)
                                         showFilterDropdown = false
                                     }
                                 )

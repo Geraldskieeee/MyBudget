@@ -69,15 +69,57 @@ class HomeViewModel @Inject constructor(
         transactionRepository.getAllTransactions(),
         settingsRepository.lastClearedTimestamp,
         walletRepository.getAllWallets()
-    ) { transactions, timestamp, wallets ->
+    ) { transactions, filterId, wallets ->
         val activeWalletIds = wallets.map { it.id }.toSet()
         val validTransactions = transactions.filter { it.walletId in activeWalletIds }
         
-        if (timestamp == 0L) {
-            validTransactions.take(5)
-        } else {
-            validTransactions.filter { it.dateTimestamp > timestamp }
+        if (filterId == 0L || filterId > 4L) return@combine validTransactions.take(5)
+        
+        val calendar = java.util.Calendar.getInstance()
+        val (startTime, endTime) = when (filterId) {
+            1L -> {
+                calendar.add(java.util.Calendar.DAY_OF_YEAR, -1)
+                val start = calendar.clone() as java.util.Calendar
+                start.set(java.util.Calendar.HOUR_OF_DAY, 0); start.set(java.util.Calendar.MINUTE, 0); start.set(java.util.Calendar.SECOND, 0); start.set(java.util.Calendar.MILLISECOND, 0)
+                val end = calendar.clone() as java.util.Calendar
+                end.set(java.util.Calendar.HOUR_OF_DAY, 23); end.set(java.util.Calendar.MINUTE, 59); end.set(java.util.Calendar.SECOND, 59); end.set(java.util.Calendar.MILLISECOND, 999)
+                start.timeInMillis to end.timeInMillis
+            }
+            2L -> {
+                calendar.add(java.util.Calendar.WEEK_OF_YEAR, -1)
+                val start = calendar.clone() as java.util.Calendar
+                start.set(java.util.Calendar.DAY_OF_WEEK, start.firstDayOfWeek)
+                start.set(java.util.Calendar.HOUR_OF_DAY, 0); start.set(java.util.Calendar.MINUTE, 0); start.set(java.util.Calendar.SECOND, 0); start.set(java.util.Calendar.MILLISECOND, 0)
+                val end = start.clone() as java.util.Calendar
+                end.add(java.util.Calendar.DAY_OF_YEAR, 6)
+                end.set(java.util.Calendar.HOUR_OF_DAY, 23); end.set(java.util.Calendar.MINUTE, 59); end.set(java.util.Calendar.SECOND, 59); end.set(java.util.Calendar.MILLISECOND, 999)
+                start.timeInMillis to end.timeInMillis
+            }
+            3L -> {
+                calendar.add(java.util.Calendar.MONTH, -1)
+                val start = calendar.clone() as java.util.Calendar
+                start.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                start.set(java.util.Calendar.HOUR_OF_DAY, 0); start.set(java.util.Calendar.MINUTE, 0); start.set(java.util.Calendar.SECOND, 0); start.set(java.util.Calendar.MILLISECOND, 0)
+                val end = calendar.clone() as java.util.Calendar
+                end.set(java.util.Calendar.DAY_OF_MONTH, end.getActualMaximum(java.util.Calendar.DAY_OF_MONTH))
+                end.set(java.util.Calendar.HOUR_OF_DAY, 23); end.set(java.util.Calendar.MINUTE, 59); end.set(java.util.Calendar.SECOND, 59); end.set(java.util.Calendar.MILLISECOND, 999)
+                start.timeInMillis to end.timeInMillis
+            }
+            4L -> {
+                calendar.add(java.util.Calendar.YEAR, -1)
+                val start = calendar.clone() as java.util.Calendar
+                start.set(java.util.Calendar.DAY_OF_YEAR, 1)
+                start.set(java.util.Calendar.HOUR_OF_DAY, 0); start.set(java.util.Calendar.MINUTE, 0); start.set(java.util.Calendar.SECOND, 0); start.set(java.util.Calendar.MILLISECOND, 0)
+                val end = calendar.clone() as java.util.Calendar
+                end.set(java.util.Calendar.MONTH, java.util.Calendar.DECEMBER)
+                end.set(java.util.Calendar.DAY_OF_MONTH, 31)
+                end.set(java.util.Calendar.HOUR_OF_DAY, 23); end.set(java.util.Calendar.MINUTE, 59); end.set(java.util.Calendar.SECOND, 59); end.set(java.util.Calendar.MILLISECOND, 999)
+                start.timeInMillis to end.timeInMillis
+            }
+            else -> 0L to Long.MAX_VALUE
         }
+        
+        validTransactions.filter { it.dateTimestamp in startTime..endTime }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -91,43 +133,14 @@ class HomeViewModel @Inject constructor(
     }
     
     val activeFilterName = settingsRepository.lastClearedTimestamp
-        .map { timestamp ->
-            if (timestamp == 0L) return@map "All Time"
-            
-            val calendar = java.util.Calendar.getInstance()
-            
-            val calToday = calendar.clone() as java.util.Calendar
-            calToday.set(java.util.Calendar.HOUR_OF_DAY, 0)
-            calToday.set(java.util.Calendar.MINUTE, 0)
-            calToday.set(java.util.Calendar.SECOND, 0)
-            calToday.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calToday.timeInMillis) return@map "Past Day"
-            
-            val calWeek = calendar.clone() as java.util.Calendar
-            calWeek.set(java.util.Calendar.DAY_OF_WEEK, calWeek.firstDayOfWeek)
-            calWeek.set(java.util.Calendar.HOUR_OF_DAY, 0)
-            calWeek.set(java.util.Calendar.MINUTE, 0)
-            calWeek.set(java.util.Calendar.SECOND, 0)
-            calWeek.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calWeek.timeInMillis) return@map "Past Week"
-            
-            val calMonth = calendar.clone() as java.util.Calendar
-            calMonth.set(java.util.Calendar.DAY_OF_MONTH, 1)
-            calMonth.set(java.util.Calendar.HOUR_OF_DAY, 0)
-            calMonth.set(java.util.Calendar.MINUTE, 0)
-            calMonth.set(java.util.Calendar.SECOND, 0)
-            calMonth.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calMonth.timeInMillis) return@map "Past Month"
-            
-            val calYear = calendar.clone() as java.util.Calendar
-            calYear.set(java.util.Calendar.DAY_OF_YEAR, 1)
-            calYear.set(java.util.Calendar.HOUR_OF_DAY, 0)
-            calYear.set(java.util.Calendar.MINUTE, 0)
-            calYear.set(java.util.Calendar.SECOND, 0)
-            calYear.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calYear.timeInMillis) return@map "Past Year"
-            
-            return@map "Filtered"
+        .map { filterId ->
+            when (filterId) {
+                1L -> "Past Day"
+                2L -> "Past Week"
+                3L -> "Past Month"
+                4L -> "Past Year"
+                else -> "All Time"
+            }
         }
         .stateIn(
             scope = viewModelScope,
