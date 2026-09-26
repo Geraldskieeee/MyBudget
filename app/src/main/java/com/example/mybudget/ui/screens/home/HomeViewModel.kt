@@ -69,7 +69,11 @@ class HomeViewModel @Inject constructor(
         transactionRepository.getAllTransactions(),
         settingsRepository.lastClearedTimestamp
     ) { transactions, timestamp ->
-        transactions.filter { it.dateTimestamp > timestamp }.take(5)
+        if (timestamp == 0L) {
+            transactions.take(5)
+        } else {
+            transactions.filter { it.dateTimestamp > timestamp }
+        }
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

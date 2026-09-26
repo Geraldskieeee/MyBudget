@@ -127,7 +127,7 @@ fun TransactionItem(
         ) {
             Column {
                 val categoryName = categories.find { it.id == transaction.categoryId }?.name ?: transaction.type.name.lowercase().replaceFirstChar { it.uppercase() }
-                val walletName = wallets.find { it.id == transaction.walletId }?.name ?: "Unknown Wallet"
+                val walletName = wallets.find { it.id == transaction.walletId }?.name
                 
                 Text(
                     text = categoryName,
@@ -149,18 +149,20 @@ fun TransactionItem(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = walletName,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    if (walletName != null) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "•",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = walletName,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {

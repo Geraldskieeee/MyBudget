@@ -234,7 +234,7 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold
                     )
                     if (recentTransactions.isNotEmpty() || isFiltered) {
-                        Box {
+                        Box(modifier = Modifier.wrapContentSize(Alignment.TopEnd)) {
                             TextButton(onClick = { showFilterDropdown = true }) {
                                 Text("Filter", color = MaterialTheme.colorScheme.primary)
                             }
