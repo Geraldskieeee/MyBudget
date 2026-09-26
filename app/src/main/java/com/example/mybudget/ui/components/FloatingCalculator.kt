@@ -21,13 +21,28 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.spring
+import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun FloatingCalculator() {
     var isExpanded by remember { mutableStateOf(false) }
-    var offsetX by remember { mutableStateOf(0f) }
+    val offsetX = remember { Animatable(0f) }
     var offsetY by remember { mutableStateOf(500f) }
+    
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val coroutineScope = rememberCoroutineScope()
+    
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val fabSizePx = with(density) { 56.dp.toPx() }
+    val paddingPx = with(density) { 32.dp.toPx() }
+    val maxX = screenWidthPx - fabSizePx - paddingPx
+
     
     // Calculator state
     var display by remember { mutableStateOf("0") }
@@ -203,17 +218,30 @@ fun FloatingCalculator() {
         ) {
             Box(
                 modifier = Modifier
-                    .offset { IntOffset(offsetX.roundToInt(), offsetY.roundToInt()) }
+                    .offset { IntOffset(offsetX.value.roundToInt(), offsetY.roundToInt()) }
                     .size(56.dp)
                     .shadow(8.dp, CircleShape)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary)
                     .pointerInput(Unit) {
-                        detectDragGestures { change, dragAmount ->
-                            change.consume()
-                            offsetX += dragAmount.x
-                            offsetY += dragAmount.y
-                        }
+                        detectDragGestures(
+                            onDragEnd = {
+                                coroutineScope.launch {
+                                    val targetX = if (offsetX.value < maxX / 2) 0f else maxX
+                                    offsetX.animateTo(
+                                        targetValue = targetX,
+                                        animationSpec = spring()
+                                    )
+                                }
+                            },
+                            onDrag = { change, dragAmount ->
+                                change.consume()
+                                coroutineScope.launch {
+                                    offsetX.snapTo(offsetX.value + dragAmount.x)
+                                }
+                                offsetY += dragAmount.y
+                            }
+                        )
                     }
             ) {
                 IconButton(
