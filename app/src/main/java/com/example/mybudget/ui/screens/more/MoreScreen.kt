@@ -132,54 +132,6 @@ fun MoreScreen(
             }
             
             // 3. Settings Menu
-            item { SettingsHeader("Account") }
-            item {
-                SettingsItem(
-                    icon = Icons.Filled.LockReset,
-                    title = "Change Password",
-                    subtitle = "Update your account password",
-                    onClick = { showChangePasswordDialog = true }
-                )
-                
-                SettingsItem(
-                    icon = Icons.AutoMirrored.Filled.Logout,
-                    title = "Logout",
-                    subtitle = "Sign out of your account",
-                    titleColor = MaterialTheme.colorScheme.error,
-                    iconTint = MaterialTheme.colorScheme.error,
-                    onClick = { showLogoutDialog = true }
-                )
-            }
-
-            item { SettingsHeader("Appearance") }
-            item {
-                SettingsSwitchItem(
-                    icon = Icons.Filled.DarkMode,
-                    title = "Dark Mode",
-                    subtitle = "Toggle dark theme",
-                    checked = isDarkMode,
-                    onCheckedChange = { viewModel.setDarkMode(it) }
-                )
-                
-                SettingsSwitchItem(
-                    icon = Icons.Filled.Animation,
-                    title = "Animations",
-                    subtitle = "Enable or disable UI animations",
-                    checked = isAnimationsEnabled,
-                    onCheckedChange = { viewModel.setAnimationsEnabled(it) }
-                )
-                
-                SettingsSliderItem(
-                    icon = Icons.Filled.FormatSize,
-                    title = "Text Adjust",
-                    subtitle = "Adjust the app's text size",
-                    value = fontScale,
-                    onValueChange = { viewModel.setFontScale(it) },
-                    valueRange = 0.8f..1.5f,
-                    steps = 6
-                )
-            }
-
             item { SettingsHeader("General") }
             item {
                 SettingsItem(
@@ -216,6 +168,35 @@ fun MoreScreen(
                 )
             }
 
+            item { SettingsHeader("Appearance") }
+            item {
+                SettingsSwitchItem(
+                    icon = Icons.Filled.DarkMode,
+                    title = "Dark Mode",
+                    subtitle = "Toggle dark theme",
+                    checked = isDarkMode,
+                    onCheckedChange = { viewModel.setDarkMode(it) }
+                )
+                
+                SettingsSwitchItem(
+                    icon = Icons.Filled.Animation,
+                    title = "Animations",
+                    subtitle = "Enable or disable UI animations",
+                    checked = isAnimationsEnabled,
+                    onCheckedChange = { viewModel.setAnimationsEnabled(it) }
+                )
+                
+                SettingsSliderItem(
+                    icon = Icons.Filled.FormatSize,
+                    title = "Text Adjust",
+                    subtitle = "Adjust the app's text size",
+                    value = fontScale,
+                    onValueChange = { viewModel.setFontScale(it) },
+                    valueRange = 0.8f..1.5f,
+                    steps = 6
+                )
+            }
+
             item { SettingsHeader("About & Support") }
             item {
                 SettingsItem(
@@ -241,6 +222,25 @@ fun MoreScreen(
                     title = "About & Credits",
                     subtitle = "App information and developer credits",
                     onClick = { showCreditsDialog = true }
+                )
+            }
+
+            item { SettingsHeader("Account") }
+            item {
+                SettingsItem(
+                    icon = Icons.Filled.LockReset,
+                    title = "Change Password",
+                    subtitle = "Update your account password",
+                    onClick = { showChangePasswordDialog = true }
+                )
+                
+                SettingsItem(
+                    icon = Icons.AutoMirrored.Filled.Logout,
+                    title = "Logout",
+                    subtitle = "Sign out of your account",
+                    titleColor = MaterialTheme.colorScheme.error,
+                    iconTint = MaterialTheme.colorScheme.error,
+                    onClick = { showLogoutDialog = true }
                 )
             }
 
