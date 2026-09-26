@@ -71,6 +71,7 @@ fun HomeScreen(
     var showFilterDropdown by remember { mutableStateOf(false) }
     val categories by viewModel.categories.collectAsState()
     val isFiltered by viewModel.isFiltered.collectAsState()
+    val activeFilterName by viewModel.activeFilterName.collectAsState()
 
     Scaffold(
         topBar = {
@@ -229,7 +230,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Recent Transactions",
+                        text = if (activeFilterName == "All Time") "Recent Transactions" else "Recent ($activeFilterName)",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )

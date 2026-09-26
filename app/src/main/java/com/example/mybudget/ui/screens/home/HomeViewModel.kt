@@ -90,6 +90,27 @@ class HomeViewModel @Inject constructor(
         }
     }
     
+    val activeFilterName = settingsRepository.lastClearedTimestamp
+        .map { timestamp ->
+            if (timestamp == 0L) return@map "All Time"
+            val now = System.currentTimeMillis()
+            val diff = now - timestamp
+            val dayMs = 24L * 60 * 60 * 1000
+            
+            when {
+                diff <= dayMs + 10000 -> "Past Day"
+                diff <= 7 * dayMs + 10000 -> "Past Week"
+                diff <= 30 * dayMs + 10000 -> "Past Month"
+                diff <= 365 * dayMs + 10000 -> "Past Year"
+                else -> "Filtered"
+            }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = "All Time"
+        )
+
     val isFiltered = settingsRepository.lastClearedTimestamp
         .map { it > 0L }
         .stateIn(
