@@ -355,22 +355,6 @@ fun BalanceCard(balance: Double) {
             .padding(16.dp)
             .background(Color.Transparent)
     ) {
-        // Glowing Aura
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .padding(8.dp) // Slightly smaller than the card
-                .background(
-                    brush = Brush.radialGradient(
-                        colors = listOf(
-                            Color(0xFF32D74B).copy(alpha = 0.4f),
-                            Color.Transparent
-                        ),
-                        radius = 400f
-                    )
-                )
-        )
-        
         // Glassmorphic Card
         Box(
             modifier = Modifier
