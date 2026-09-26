@@ -3,6 +3,7 @@ package com.example.mybudget.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mybudget.data.repository.TransactionRepository
+import com.example.mybudget.data.repository.CategoryRepository
 import com.example.mybudget.data.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -32,6 +33,7 @@ import kotlinx.coroutines.flow.first
 class HomeViewModel @Inject constructor(
     private val walletRepository: WalletRepository,
     private val transactionRepository: TransactionRepository,
+    private val categoryRepository: CategoryRepository,
     private val billRepository: BillRepository,
     private val goalRepository: GoalRepository,
     private val debtRepository: DebtRepository,
@@ -44,6 +46,14 @@ class HomeViewModel @Inject constructor(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = 0.0
+        )
+
+    
+    val categories = categoryRepository.getAllCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
         )
 
     val wallets = walletRepository.getAllWallets()
@@ -64,9 +74,9 @@ class HomeViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
-    fun clearRecentTransactions() {
+    fun clearRecentTransactions(thresholdTimestamp: Long = System.currentTimeMillis()) {
         viewModelScope.launch {
-            settingsRepository.setLastClearedTimestamp(System.currentTimeMillis())
+            settingsRepository.setLastClearedTimestamp(thresholdTimestamp)
         }
     }
 

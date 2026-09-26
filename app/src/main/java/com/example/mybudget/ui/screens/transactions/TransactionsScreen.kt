@@ -33,6 +33,8 @@ fun TransactionsScreen(
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
     val transactions by viewModel.transactions.collectAsState()
+    val allCategories by viewModel.allCategories.collectAsState()
+    val wallets by viewModel.wallets.collectAsState()
 
     Scaffold(
         topBar = {
@@ -77,7 +79,7 @@ fun TransactionsScreen(
                             onLongClick = { showDelete = true }
                         )
                     ) {
-                        TransactionItem(transaction = transaction, showDelete = showDelete, onDelete = { 
+                        TransactionItem(transaction = transaction, categories = allCategories, wallets = wallets, showDelete = showDelete, onDelete = { 
                             viewModel.deleteTransaction(it)
                             showDelete = false
                         })
@@ -89,7 +91,13 @@ fun TransactionsScreen(
 }
 
 @Composable
-fun TransactionItem(transaction: Transaction, showDelete: Boolean = false, onDelete: (Transaction) -> Unit = {}) {
+fun TransactionItem(
+    transaction: Transaction,
+    categories: List<com.example.mybudget.data.local.entity.Category> = emptyList(),
+    wallets: List<com.example.mybudget.data.local.entity.Wallet> = emptyList(),
+    showDelete: Boolean = false,
+    onDelete: (Transaction) -> Unit = {}
+) {
     val dateFormatter = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
     val dateString = dateFormatter.format(Date(transaction.dateTimestamp))
 
@@ -118,17 +126,42 @@ fun TransactionItem(transaction: Transaction, showDelete: Boolean = false, onDel
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
+                val categoryName = categories.find { it.id == transaction.categoryId }?.name ?: transaction.type.name.lowercase().replaceFirstChar { it.uppercase() }
+                val walletName = wallets.find { it.id == transaction.walletId }?.name ?: "Unknown Wallet"
+                
                 Text(
-                    text = transaction.note.ifEmpty { transaction.type.name.lowercase().replaceFirstChar { it.uppercase() } },
+                    text = categoryName,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+                if (transaction.note.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = transaction.note,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = dateString,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = dateString,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = walletName,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(

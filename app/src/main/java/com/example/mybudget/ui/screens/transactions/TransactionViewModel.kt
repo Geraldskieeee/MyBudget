@@ -5,8 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.mybudget.data.local.entity.Transaction
 import com.example.mybudget.data.local.entity.TransactionType
 import com.example.mybudget.data.repository.TransactionRepository
-import com.example.mybudget.data.repository.WalletRepository
 import com.example.mybudget.data.repository.CategoryRepository
+import com.example.mybudget.data.repository.WalletRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,14 +22,22 @@ class TransactionViewModel @Inject constructor(
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
-    val transactions = transactionRepository.getAllTransactions()
+    
+    val allCategories = categoryRepository.getAllCategories()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+        
+    val wallets = walletRepository.getAllWallets()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    val wallets = walletRepository.getAllWallets()
+    val transactions = transactionRepository.getAllTransactions()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

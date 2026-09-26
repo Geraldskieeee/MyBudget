@@ -68,6 +68,8 @@ fun HomeScreen(
     var isWalletSelectionMode by remember { mutableStateOf(false) }
     var selectedWallets by remember { mutableStateOf(setOf<Long>()) }
     var showDeleteWalletDialog by remember { mutableStateOf(false) }
+    var showClearDropdown by remember { mutableStateOf(false) }
+    val categories by viewModel.categories.collectAsState()
 
     Scaffold(
         topBar = {
@@ -231,8 +233,56 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold
                     )
                     if (recentTransactions.isNotEmpty()) {
-                        TextButton(onClick = { viewModel.clearRecentTransactions() }) {
-                            Text("Clear", color = MaterialTheme.colorScheme.primary)
+                        Box {
+                            TextButton(onClick = { showClearDropdown = true }) {
+                                Text("Clear", color = MaterialTheme.colorScheme.primary)
+                            }
+                            DropdownMenu(
+                                expanded = showClearDropdown,
+                                onDismissRequest = { showClearDropdown = false }
+                            ) {
+                                val now = System.currentTimeMillis()
+                                val dayMs = 24L * 60 * 60 * 1000
+                                val weekMs = 7 * dayMs
+                                val monthMs = 30 * dayMs
+                                val yearMs = 365 * dayMs
+                                
+                                DropdownMenuItem(
+                                    text = { Text("Past Day") },
+                                    onClick = { 
+                                        viewModel.clearRecentTransactions(now - dayMs)
+                                        showClearDropdown = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Past Week") },
+                                    onClick = { 
+                                        viewModel.clearRecentTransactions(now - weekMs)
+                                        showClearDropdown = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Past Month") },
+                                    onClick = { 
+                                        viewModel.clearRecentTransactions(now - monthMs)
+                                        showClearDropdown = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Past Year") },
+                                    onClick = { 
+                                        viewModel.clearRecentTransactions(now - yearMs)
+                                        showClearDropdown = false
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("All Time") },
+                                    onClick = { 
+                                        viewModel.clearRecentTransactions(now)
+                                        showClearDropdown = false
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -263,7 +313,7 @@ fun HomeScreen(
             } else {
                 items(recentTransactions) { transaction ->
                     Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
-                        TransactionItem(transaction = transaction)
+                        TransactionItem(transaction = transaction, categories = categories, wallets = wallets)
                     }
                 }
             }
