@@ -101,7 +101,7 @@ class HomeViewModel @Inject constructor(
             calToday.set(java.util.Calendar.MINUTE, 0)
             calToday.set(java.util.Calendar.SECOND, 0)
             calToday.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calToday.timeInMillis) return@map "Today"
+            if (timestamp == calToday.timeInMillis) return@map "Past Day"
             
             val calWeek = calendar.clone() as java.util.Calendar
             calWeek.set(java.util.Calendar.DAY_OF_WEEK, calWeek.firstDayOfWeek)
@@ -109,7 +109,7 @@ class HomeViewModel @Inject constructor(
             calWeek.set(java.util.Calendar.MINUTE, 0)
             calWeek.set(java.util.Calendar.SECOND, 0)
             calWeek.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calWeek.timeInMillis) return@map "This Week"
+            if (timestamp == calWeek.timeInMillis) return@map "Past Week"
             
             val calMonth = calendar.clone() as java.util.Calendar
             calMonth.set(java.util.Calendar.DAY_OF_MONTH, 1)
@@ -117,7 +117,7 @@ class HomeViewModel @Inject constructor(
             calMonth.set(java.util.Calendar.MINUTE, 0)
             calMonth.set(java.util.Calendar.SECOND, 0)
             calMonth.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calMonth.timeInMillis) return@map "This Month"
+            if (timestamp == calMonth.timeInMillis) return@map "Past Month"
             
             val calYear = calendar.clone() as java.util.Calendar
             calYear.set(java.util.Calendar.DAY_OF_YEAR, 1)
@@ -125,7 +125,7 @@ class HomeViewModel @Inject constructor(
             calYear.set(java.util.Calendar.MINUTE, 0)
             calYear.set(java.util.Calendar.SECOND, 0)
             calYear.set(java.util.Calendar.MILLISECOND, 0)
-            if (timestamp == calYear.timeInMillis) return@map "This Year"
+            if (timestamp == calYear.timeInMillis) return@map "Past Year"
             
             return@map "Filtered"
         }

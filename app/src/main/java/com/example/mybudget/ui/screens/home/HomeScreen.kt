@@ -246,7 +246,7 @@ fun HomeScreen(
                                 val calendar = java.util.Calendar.getInstance()
                                 
                                 DropdownMenuItem(
-                                    text = { Text("Today") },
+                                    text = { Text("Show Past Day") },
                                     onClick = { 
                                         val cal = calendar.clone() as java.util.Calendar
                                         cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
@@ -258,7 +258,7 @@ fun HomeScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("This Week") },
+                                    text = { Text("Show Past Week") },
                                     onClick = { 
                                         val cal = calendar.clone() as java.util.Calendar
                                         cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
@@ -271,7 +271,7 @@ fun HomeScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("This Month") },
+                                    text = { Text("Show Past Month") },
                                     onClick = { 
                                         val cal = calendar.clone() as java.util.Calendar
                                         cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
@@ -284,7 +284,7 @@ fun HomeScreen(
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("This Year") },
+                                    text = { Text("Show Past Year") },
                                     onClick = { 
                                         val cal = calendar.clone() as java.util.Calendar
                                         cal.set(java.util.Calendar.DAY_OF_YEAR, 1)
