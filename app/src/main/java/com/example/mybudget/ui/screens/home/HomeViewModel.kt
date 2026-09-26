@@ -93,17 +93,41 @@ class HomeViewModel @Inject constructor(
     val activeFilterName = settingsRepository.lastClearedTimestamp
         .map { timestamp ->
             if (timestamp == 0L) return@map "All Time"
-            val now = System.currentTimeMillis()
-            val diff = now - timestamp
-            val dayMs = 24L * 60 * 60 * 1000
             
-            when {
-                diff <= dayMs + 10000 -> "Past Day"
-                diff <= 7 * dayMs + 10000 -> "Past Week"
-                diff <= 30 * dayMs + 10000 -> "Past Month"
-                diff <= 365 * dayMs + 10000 -> "Past Year"
-                else -> "Filtered"
-            }
+            val calendar = java.util.Calendar.getInstance()
+            
+            val calToday = calendar.clone() as java.util.Calendar
+            calToday.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            calToday.set(java.util.Calendar.MINUTE, 0)
+            calToday.set(java.util.Calendar.SECOND, 0)
+            calToday.set(java.util.Calendar.MILLISECOND, 0)
+            if (timestamp == calToday.timeInMillis) return@map "Today"
+            
+            val calWeek = calendar.clone() as java.util.Calendar
+            calWeek.set(java.util.Calendar.DAY_OF_WEEK, calWeek.firstDayOfWeek)
+            calWeek.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            calWeek.set(java.util.Calendar.MINUTE, 0)
+            calWeek.set(java.util.Calendar.SECOND, 0)
+            calWeek.set(java.util.Calendar.MILLISECOND, 0)
+            if (timestamp == calWeek.timeInMillis) return@map "This Week"
+            
+            val calMonth = calendar.clone() as java.util.Calendar
+            calMonth.set(java.util.Calendar.DAY_OF_MONTH, 1)
+            calMonth.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            calMonth.set(java.util.Calendar.MINUTE, 0)
+            calMonth.set(java.util.Calendar.SECOND, 0)
+            calMonth.set(java.util.Calendar.MILLISECOND, 0)
+            if (timestamp == calMonth.timeInMillis) return@map "This Month"
+            
+            val calYear = calendar.clone() as java.util.Calendar
+            calYear.set(java.util.Calendar.DAY_OF_YEAR, 1)
+            calYear.set(java.util.Calendar.HOUR_OF_DAY, 0)
+            calYear.set(java.util.Calendar.MINUTE, 0)
+            calYear.set(java.util.Calendar.SECOND, 0)
+            calYear.set(java.util.Calendar.MILLISECOND, 0)
+            if (timestamp == calYear.timeInMillis) return@map "This Year"
+            
+            return@map "Filtered"
         }
         .stateIn(
             scope = viewModelScope,

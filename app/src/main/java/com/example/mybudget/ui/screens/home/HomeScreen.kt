@@ -243,37 +243,56 @@ fun HomeScreen(
                                 expanded = showFilterDropdown,
                                 onDismissRequest = { showFilterDropdown = false }
                             ) {
-                                val now = System.currentTimeMillis()
-                                val dayMs = 24L * 60 * 60 * 1000
-                                val weekMs = 7 * dayMs
-                                val monthMs = 30 * dayMs
-                                val yearMs = 365 * dayMs
+                                val calendar = java.util.Calendar.getInstance()
                                 
                                 DropdownMenuItem(
-                                    text = { Text("Show Past Day") },
+                                    text = { Text("Today") },
                                     onClick = { 
-                                        viewModel.clearRecentTransactions(now - dayMs)
+                                        val cal = calendar.clone() as java.util.Calendar
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                        cal.set(java.util.Calendar.MINUTE, 0)
+                                        cal.set(java.util.Calendar.SECOND, 0)
+                                        cal.set(java.util.Calendar.MILLISECOND, 0)
+                                        viewModel.clearRecentTransactions(cal.timeInMillis)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Show Past Week") },
+                                    text = { Text("This Week") },
                                     onClick = { 
-                                        viewModel.clearRecentTransactions(now - weekMs)
+                                        val cal = calendar.clone() as java.util.Calendar
+                                        cal.set(java.util.Calendar.DAY_OF_WEEK, cal.firstDayOfWeek)
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                        cal.set(java.util.Calendar.MINUTE, 0)
+                                        cal.set(java.util.Calendar.SECOND, 0)
+                                        cal.set(java.util.Calendar.MILLISECOND, 0)
+                                        viewModel.clearRecentTransactions(cal.timeInMillis)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Show Past Month") },
+                                    text = { Text("This Month") },
                                     onClick = { 
-                                        viewModel.clearRecentTransactions(now - monthMs)
+                                        val cal = calendar.clone() as java.util.Calendar
+                                        cal.set(java.util.Calendar.DAY_OF_MONTH, 1)
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                        cal.set(java.util.Calendar.MINUTE, 0)
+                                        cal.set(java.util.Calendar.SECOND, 0)
+                                        cal.set(java.util.Calendar.MILLISECOND, 0)
+                                        viewModel.clearRecentTransactions(cal.timeInMillis)
                                         showFilterDropdown = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Show Past Year") },
+                                    text = { Text("This Year") },
                                     onClick = { 
-                                        viewModel.clearRecentTransactions(now - yearMs)
+                                        val cal = calendar.clone() as java.util.Calendar
+                                        cal.set(java.util.Calendar.DAY_OF_YEAR, 1)
+                                        cal.set(java.util.Calendar.HOUR_OF_DAY, 0)
+                                        cal.set(java.util.Calendar.MINUTE, 0)
+                                        cal.set(java.util.Calendar.SECOND, 0)
+                                        cal.set(java.util.Calendar.MILLISECOND, 0)
+                                        viewModel.clearRecentTransactions(cal.timeInMillis)
                                         showFilterDropdown = false
                                     }
                                 )
