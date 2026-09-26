@@ -23,6 +23,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                androidx.core.app.ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+            }
+        }
+
+        val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.mybudget.worker.ReminderWorker>(12, java.util.concurrent.TimeUnit.HOURS)
+            .build()
+        androidx.work.WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "ReminderWorker",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            workRequest
+        )
+
         enableEdgeToEdge()
         setContent {
             val mainViewModel: com.example.mybudget.ui.navigation.MainViewModel = hiltViewModel()
