@@ -71,6 +71,7 @@ fun BottomNavBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .navigationBarsPadding()
                 .padding(horizontal = 24.dp, vertical = 16.dp),
             contentAlignment = Alignment.BottomCenter
         ) {

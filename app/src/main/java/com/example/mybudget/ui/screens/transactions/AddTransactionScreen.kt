@@ -31,6 +31,7 @@ import com.example.mybudget.data.local.entity.TransactionType
 @Composable
 fun AddTransactionScreen(
     onNavigateBack: () -> Unit,
+    onTransactionAdded: () -> Unit = onNavigateBack,
     initialType: String? = null,
     viewModel: TransactionViewModel = hiltViewModel()
 ) {
@@ -293,7 +294,7 @@ fun AddTransactionScreen(
                                 toWalletId = if (selectedType == TransactionType.TRANSFER) selectedToWalletId else null,
                                 categoryId = if (selectedType != TransactionType.TRANSFER) selectedCategoryId else null
                             )
-                            onNavigateBack()
+                            onTransactionAdded()
                         }
                         showConfirmDialog = true
                     } else {

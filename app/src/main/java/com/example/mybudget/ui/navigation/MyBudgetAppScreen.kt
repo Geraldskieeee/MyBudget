@@ -20,6 +20,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -68,6 +70,8 @@ fun MyBudgetAppScreen(
     val showFloatingCalculator by mainViewModel.showFloatingCalculator.collectAsState()
     val fontScale by mainViewModel.fontScale.collectAsState()
     val context = LocalContext.current
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     
     var showExitDialog by remember { mutableStateOf(false) }
 
@@ -118,6 +122,7 @@ fun MyBudgetAppScreen(
         androidx.compose.ui.platform.LocalDensity provides customDensity
     ) {
         Scaffold(
+            snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
             bottomBar = {
                 if (showBottomBar) {
                     BottomNavBar(
@@ -247,6 +252,22 @@ fun MyBudgetAppScreen(
                 val transactionType = backStackEntry.arguments?.getString("type")
                 AddTransactionScreen(
                     onNavigateBack = { navController.popBackStack() },
+                    onTransactionAdded = {
+                        scope.launch {
+                            val result = snackbarHostState.showSnackbar(
+                                message = "Transaction added",
+                                actionLabel = "Undo",
+                                duration = androidx.compose.material3.SnackbarDuration.Short
+                            )
+                            if (result == androidx.compose.material3.SnackbarResult.ActionPerformed) {
+                                // Call a method to undo the transaction
+                                // We need access to TransactionRepository or a shared ViewModel
+                                // Let's use mainViewModel to undo
+                                mainViewModel.undoLastTransaction()
+                            }
+                        }
+                        navController.popBackStack()
+                    },
                     initialType = transactionType
                 )
             }

@@ -47,7 +47,7 @@ class MainViewModel @Inject constructor(
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null // null means we don't know yet (loading)
+            initialValue = authRepository.getSignedInUser() != null
         )
 
     val isDarkMode: StateFlow<Boolean> = settingsRepository.isDarkMode
@@ -79,4 +79,9 @@ class MainViewModel @Inject constructor(
             initialValue = 1.0f
         )
 
+    fun undoLastTransaction() {
+        viewModelScope.launch {
+            transactionRepository.undoLastTransaction()
+        }
+    }
 }
