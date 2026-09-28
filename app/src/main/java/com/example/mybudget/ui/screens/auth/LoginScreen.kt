@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -49,6 +50,15 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = com.example.mybudget.R.drawable.ic_app_logo),
+                contentDescription = "App Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(32.dp))
+                    .padding(bottom = 16.dp)
+            )
+            
             Text(
                 text = "My Budget",
                 fontSize = 42.sp,
