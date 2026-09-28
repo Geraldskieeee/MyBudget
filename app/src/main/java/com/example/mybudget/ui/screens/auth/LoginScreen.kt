@@ -51,7 +51,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center
         ) {
             androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.example.mybudget.R.drawable.ic_app_logo),
+                painter = androidx.compose.ui.res.painterResource(id = com.example.mybudget.R.drawable.ic_app_logo_cropped),
                 contentDescription = "App Logo",
                 modifier = Modifier
                     .size(120.dp)
