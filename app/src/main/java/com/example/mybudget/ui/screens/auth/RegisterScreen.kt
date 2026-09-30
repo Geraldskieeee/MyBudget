@@ -49,6 +49,19 @@ fun RegisterScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            coil.compose.AsyncImage(
+                model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(com.example.mybudget.R.drawable.welcome_illustration)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Welcome Illustration",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(bottom = 16.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
+            )
+            
             Text(
                 text = "My Budget",
                 fontSize = 42.sp,

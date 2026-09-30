@@ -50,13 +50,17 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            androidx.compose.foundation.Image(
-                painter = androidx.compose.ui.res.painterResource(id = com.example.mybudget.R.drawable.ic_app_logo_cropped),
-                contentDescription = "App Logo",
+            coil.compose.AsyncImage(
+                model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(com.example.mybudget.R.drawable.welcome_illustration)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = "Welcome Illustration",
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(32.dp))
-                    .padding(bottom = 16.dp)
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .padding(bottom = 16.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             
             Text(
